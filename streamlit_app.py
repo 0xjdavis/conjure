@@ -7,8 +7,8 @@ import requests
 st.markdown("""
 <style>
     div[data-testid="column"] {
-        background-color: white;
-        border: 1px solid #e1e4e8;
+        background-color: #ffffff;
+        border: 10px solid #ff0000;
         border-radius: 10px;
         padding: 1rem;
         margin: 0.2rem;
