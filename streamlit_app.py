@@ -9,7 +9,7 @@ import json
 # Custom CSS for simple card border
 st.markdown("""
 <style>
-    div[data-testid="column"] {
+    div[data-testid="stColumn"] {
         background-color: #ffffff;
         border: 10px solid #ff0000;
         border-radius: 10px;
