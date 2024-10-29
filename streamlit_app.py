@@ -6,7 +6,7 @@ import aiohttp
 import asyncio
 from datetime import datetime
 
-st.set_page_config(layout="wide")
+#st.set_page_config(layout="wide")
 
 # Custom CSS for card styling
 st.markdown("""
@@ -16,7 +16,8 @@ st.markdown("""
         border: 1px solid #e1e4e8;
         border-radius: 10px;
         color: #000000;
-        padding: 1rem;
+        margin:0;
+        padding: 0;
         text-align: center;
     }
     
@@ -29,12 +30,12 @@ st.markdown("""
         justify-content: center;
         align-items: center;
         width: 100%;
-        height: 60px;
+        height: 50px;
         margin: 0 auto;
     }
     
     .element-container {
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
     }
 </style>
 """, unsafe_allow_html=True)
