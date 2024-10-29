@@ -26,7 +26,7 @@ async def fetch_crypto_data():
         'order': 'market_cap_desc',
         'per_page': '100',
         'page': '1',
-        'sparkline': 'false'  # Changed to string 'false' instead of boolean False
+        'sparkline': 'True'  # Changed to string 'false' instead of boolean False
     }
     
     try:
