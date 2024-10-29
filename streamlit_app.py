@@ -17,7 +17,7 @@ for i, row in df.iterrows():
     with st.container():
         col1, col2 = st.columns(2)
         change = f"{row['price_change_percentage_24h']:.2f}%"
-        color = "green" if change >= 0 else "red"
+        color = "green" if change > "0.0" else "red"
 
         with col1: 
             st.metric(row["name"], row["current_price"], change, delta_color=color)
