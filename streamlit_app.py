@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import aiohttp
 import asyncio
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 st.set_page_config(layout="wide")
 
@@ -35,6 +36,26 @@ if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 
 
+async def fetch_historical_prices(session, coin_id):
+    days = '30'
+    url = f'https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart'
+    params = {
+        'vs_currency': 'usd',
+        'days': days,
+        'interval': 'daily'
+    }
+    
+    try:
+        async with session.get(url, params=params, timeout=10) as response:
+            if response.status == 200:
+                data = await response.json()
+                prices = pd.DataFrame(data['prices'], columns=['timestamp', 'price'])
+                prices['timestamp'] = pd.to_datetime(prices['timestamp'], unit='ms')
+                return prices
+            return None
+    except Exception:
+        return None
+
 async def fetch_crypto_data():
     url = 'https://api.coingecko.com/api/v3/coins/markets'
     params = {
@@ -47,18 +68,59 @@ async def fetch_crypto_data():
     
     try:
         async with aiohttp.ClientSession() as session:
+            # Fetch current market data
             async with session.get(url, params=params, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return pd.DataFrame(data)
+                    df = pd.DataFrame(data)
+                    
+                    # Fetch historical data for each coin
+                    historical_data = {}
+                    for coin in data:
+                        hist_prices = await fetch_historical_prices(session, coin['id'])
+                        if hist_prices is not None:
+                            historical_data[coin['id']] = hist_prices
+                    
+                    return df, historical_data
                 else:
                     st.error(f"API Error: Status code {response.status}")
-                    return None
+                    return None, None
     except Exception as e:
         st.error(f"Error fetching data: {str(e)}")
-        return None
+        return None, None
 
-def display_dashboard(df, placeholder):
+def create_sparkline(prices_df, current_price):
+    fig = go.Figure()
+    
+    # Add price line
+    fig.add_trace(go.Scatter(
+        x=prices_df['timestamp'],
+        y=prices_df['price'],
+        line=dict(color='blue', width=1),
+        showlegend=False
+    ))
+    
+    # Update layout for minimal appearance
+    fig.update_layout(
+        height=60,
+        margin=dict(l=0, r=0, t=0, b=0, pad=0),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False
+        ),
+        xaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False
+        )
+    )
+    
+    return fig
+
+def display_dashboard(df, historical_data, placeholder):
     with placeholder.container():
         # Streamlit UI
         st.title("Crypto Dashboard")
@@ -99,6 +161,14 @@ def display_dashboard(df, placeholder):
                             delta=change,
                             delta_color=delta_color
                         )
+                        
+                        # Add sparkline chart if historical data is available
+                        if row['id'] in historical_data:
+                            fig = create_sparkline(
+                                historical_data[row['id']], 
+                                row['current_price']
+                            )
+                            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Create market cap visualization
         st.subheader("Market Cap Comparison")
@@ -127,11 +197,11 @@ async def main():
     
     while True:
         # Fetch new data
-        df = await fetch_crypto_data()
+        df, historical_data = await fetch_crypto_data()
         
-        if df is not None:
+        if df is not None and historical_data is not None:
             # Update the dashboard with new data
-            display_dashboard(df, dashboard_placeholder)
+            display_dashboard(df, historical_data, dashboard_placeholder)
         
         # Wait for 60 seconds before next update
         await asyncio.sleep(60)
