@@ -13,9 +13,8 @@ st.markdown("""
         background-color: white;
         border: 1px solid #e1e4e8;
         border-radius: 10px;
-        margin: 0.2rem;
         padding: 1rem;
-        text-align:center;
+        margin: 0.2rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -25,9 +24,9 @@ async def fetch_crypto_data():
     params = {
         'vs_currency': 'usd',
         'order': 'market_cap_desc',
-        'per_page': 100,
-        'page': 1,
-        'sparkline': False
+        'per_page': '100',
+        'page': '1',
+        'sparkline': 'false'  # Changed to string 'false' instead of boolean False
     }
     
     try:
