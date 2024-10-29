@@ -11,12 +11,16 @@ st.set_page_config(layout="wide")
 # Enhanced CSS for better card styling and full-width sparklines
 st.markdown("""
 <style>
-    div[data-testid="stVerticalBlock"] {
+        div[data-testid="stVerticalBlock"] {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 800px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        box-sizing: border-box;
     }
     div[data-testid="stColumn"] {
         background-color: #ffffff;
