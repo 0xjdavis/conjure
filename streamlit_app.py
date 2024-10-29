@@ -22,6 +22,7 @@ st.markdown("""
         height: auto;
         margin: 0;
         padding: 0;
+        width:180px;
     }
 </style>
 """, unsafe_allow_html=True)
