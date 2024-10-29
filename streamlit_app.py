@@ -21,7 +21,9 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        min-width: 150px;
         gap: 0.5rem;
+        overflow: hidden;
     }
     
     /* Center the image container */
