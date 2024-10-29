@@ -16,7 +16,8 @@ st.markdown("""
         color: #000000;
         margin: 0.2rem;
         padding: 1rem;
-        text-align: center;
+        flex: flexbox;
+        align-items: center;
     }
 </style>
 """, unsafe_allow_html=True)
