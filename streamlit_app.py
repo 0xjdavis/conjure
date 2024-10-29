@@ -14,10 +14,9 @@ st.markdown("""
         border: 10px solid #ffffff;
         border-radius: 10px;
         color: #000000;
-        margin: 0.2rem;
-        padding: 1rem;
-        flex: flexbox;
-        align-items: center;
+        height: auto;
+        margin: 0;
+        padding: 0;
     }
 </style>
 """, unsafe_allow_html=True)
