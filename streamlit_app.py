@@ -22,6 +22,7 @@ st.markdown("""
         height: auto;
         margin: 0;
         padding: 0;
+        text-align:center;
         width:180px;
     }
 </style>
