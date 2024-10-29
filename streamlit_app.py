@@ -8,7 +8,7 @@ from datetime import datetime
 
 st.set_page_config(layout="wide")
 
-# Custom CSS for card styling
+# Enhanced CSS for better card styling and centering
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
@@ -16,14 +16,45 @@ st.markdown("""
         border: 1px solid #e1e4e8;
         border-radius: 10px;
         color: #000000;
-        padding: 1rem;
-        text-align: center;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
     
-    div[data-testid="stMetric"] {
+    /* Center the image container */
+    div[data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         margin-bottom: 0.5rem;
     }
     
+    /* Center metric label and value */
+    div[data-testid="stMetric"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Center metric label text */
+    div[data-testid="stMetricLabel"] {
+        text-align: center;
+        width: 100%;
+    }
+    
+    /* Center metric value */
+    div[data-testid="stMetricValue"] {
+        text-align: center;
+        width: 100%;
+    }
+    
+    /* Sparkline container styling */
     .sparkline-container {
         display: flex;
         justify-content: center;
@@ -33,8 +64,16 @@ st.markdown("""
         margin: 0 auto;
     }
     
+    /* Adjust spacing between elements */
     .element-container {
         margin-bottom: 0.5rem;
+    }
+    
+    /* Custom styling for plotly charts in cards */
+    div[data-testid="stColumn"] .stPlotlyChart {
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -119,8 +158,8 @@ def create_sparkline(sparkline_data, coin_id):
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        height=50,  # Increased height for better visibility
-        width=150,  # Increased width for better visibility
+        height=50,
+        width=150,
         yaxis={
             'visible': False,
             'showgrid': False,
@@ -154,46 +193,48 @@ def display_dashboard(df, placeholder):
                 if i + j < len(df):
                     row = df.iloc[i + j]
                     with cols[j]:
-                        # Display logo
-                        if pd.notna(row["image"]):
-                            st.image(row["image"], width=50)
-                        
-                        # Format price
-                        price = f"${row['current_price']:,.2f}"
-                        
-                        # Handle price change
-                        if pd.notna(row['price_change_percentage_24h']):
-                            change = f"{row['price_change_percentage_24h']:.2f}%"
-                            delta_color = "normal" if row['price_change_percentage_24h'] >= 0 else "inverse"
-                        else:
-                            change = "N/A"
-                            delta_color = "normal"
-                        
-                        # Display metric
-                        st.metric(
-                            label=row["name"],
-                            value=price,
-                            delta=change,
-                            delta_color=delta_color
-                        )
-                        
-                        # Display sparkline
-                        try:
-                            sparkline_data = row.get('sparkline_in_7d')
-                            if sparkline_data is not None:
-                                fig = create_sparkline(sparkline_data, row['id'])
-                                if fig:
-                                    st.plotly_chart(
-                                        fig,
-                                        use_container_width=True,
-                                        config={
-                                            'displayModeBar': False,
-                                            'staticPlot': True
-                                        },
-                                        key=f"sparkline_{row['id']}_{i}_{j}"
-                                    )
-                        except Exception as e:
-                            st.write(f"Error displaying sparkline: {str(e)}")
+                        # Create a container for better alignment
+                        with st.container():
+                            # Display logo
+                            if pd.notna(row["image"]):
+                                st.image(row["image"], width=50)
+                            
+                            # Format price
+                            price = f"${row['current_price']:,.2f}"
+                            
+                            # Handle price change
+                            if pd.notna(row['price_change_percentage_24h']):
+                                change = f"{row['price_change_percentage_24h']:.2f}%"
+                                delta_color = "normal" if row['price_change_percentage_24h'] >= 0 else "inverse"
+                            else:
+                                change = "N/A"
+                                delta_color = "normal"
+                            
+                            # Display metric
+                            st.metric(
+                                label=row["name"],
+                                value=price,
+                                delta=change,
+                                delta_color=delta_color
+                            )
+                            
+                            # Display sparkline
+                            try:
+                                sparkline_data = row.get('sparkline_in_7d')
+                                if sparkline_data is not None:
+                                    fig = create_sparkline(sparkline_data, row['id'])
+                                    if fig:
+                                        st.plotly_chart(
+                                            fig,
+                                            use_container_width=True,
+                                            config={
+                                                'displayModeBar': False,
+                                                'staticPlot': True
+                                            },
+                                            key=f"sparkline_{row['id']}_{i}_{j}"
+                                        )
+                            except Exception as e:
+                                st.write(f"Error displaying sparkline: {str(e)}")
 
         # Market cap visualization
         st.subheader("Market Cap Comparison")
