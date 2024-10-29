@@ -153,7 +153,7 @@ def display_dashboard(df, historical_data, placeholder):
                         
                         # Display metric below logo
                         st.metric(
-                            label=row["name"],
+                            label=row["symbol"],
                             value=price,
                             delta=change,
                             delta_color=delta_color
