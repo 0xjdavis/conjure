@@ -12,6 +12,7 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
     div[data-testid="stVerticalBlock"] {
+        text-align: center;
         width: 800px;
     }
     div[data-testid="stColumn"] {
