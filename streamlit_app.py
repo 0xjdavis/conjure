@@ -4,9 +4,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import aiohttp
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 
-#st.set_page_config(layout="wide")
+st.set_page_config(layout="wide")
 
 # Custom CSS for card styling
 st.markdown("""
@@ -40,50 +40,46 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 async def fetch_crypto_data():
-    # First, get the list of top 100 cryptocurrencies
+    # For CoinGecko API, we need to use the market_chart endpoint for 30-day data
     markets_url = 'https://api.coingecko.com/api/v3/coins/markets'
     markets_params = {
         'vs_currency': 'usd',
         'order': 'market_cap_desc',
         'per_page': '100',
         'page': '1',
-        'sparkline': 'false'
+        'sparkline': 'true',
+        'days': '30'  # Request 30 days of data
     }
     
     try:
         async with aiohttp.ClientSession() as session:
-            # Fetch basic market data
             async with session.get(markets_url, params=markets_params, timeout=10) as response:
                 if response.status == 200:
-                    market_data = await response.json()
-                    df = pd.DataFrame(market_data)
+                    data = await response.json()
+                    df = pd.DataFrame(data)
                     
-                    # Get 30-day historical data for each cryptocurrency
+                    # For each cryptocurrency, fetch detailed 30-day price data
                     for i, coin in enumerate(df['id']):
-                        # Add delay to respect rate limits
-                        if i > 0 and i % 10 == 0:
+                        if i > 0 and i % 10 == 0:  # Rate limiting
                             await asyncio.sleep(1)
                             
-                        history_url = f'https://api.coingecko.com/api/v3/coins/{coin}/market_chart'
-                        history_params = {
+                        detail_url = f'https://api.coingecko.com/api/v3/coins/{coin}/market_chart'
+                        detail_params = {
                             'vs_currency': 'usd',
                             'days': '30',
                             'interval': 'daily'
                         }
                         
                         try:
-                            async with session.get(history_url, params=history_params, timeout=10) as hist_response:
-                                if hist_response.status == 200:
-                                    hist_data = await hist_response.json()
-                                    # Extract prices and store in dataframe
-                                    prices = [price[1] for price in hist_data['prices']]
-                                    df.loc[df['id'] == coin, 'sparkline_prices'] = str(prices)
-                                else:
-                                    df.loc[df['id'] == coin, 'sparkline_prices'] = '[]'
+                            async with session.get(detail_url, params=detail_params, timeout=10) as detail_response:
+                                if detail_response.status == 200:
+                                    detail_data = await detail_response.json()
+                                    # Store the prices in the dataframe
+                                    prices = [price[1] for price in detail_data['prices']]
+                                    df.loc[df['id'] == coin, 'price_30d'] = str(prices)
                         except Exception as e:
-                            print(f"Error fetching history for {coin}: {str(e)}")
-                            df.loc[df['id'] == coin, 'sparkline_prices'] = '[]'
-                    
+                            print(f"Error fetching detail for {coin}: {str(e)}")
+                            
                     return df
                 else:
                     st.error(f"API Error: Status code {response.status}")
@@ -99,13 +95,13 @@ def create_sparkline(prices_str, coin_id):
         if not prices or len(prices) < 2:
             return None
         
-        # Calculate price change for this specific crypto
+        # Calculate price change
         price_change = prices[-1] - prices[0]
         line_color = '#00ff00' if price_change >= 0 else '#ff0000'
         
         fig = go.Figure()
         
-        # Add price line with improved styling
+        # Add price line
         fig.add_trace(go.Scatter(
             y=prices,
             mode='lines',
@@ -117,7 +113,7 @@ def create_sparkline(prices_str, coin_id):
             fillcolor=f'rgba{tuple(int(line_color[i:i+2], 16) for i in (1, 3, 5)) + (0.2,)}'
         ))
         
-        # Enhanced layout configuration
+        # Layout configuration
         fig.update_layout(
             margin=dict(l=0, r=0, t=4, b=4),
             paper_bgcolor='rgba(0,0,0,0)',
@@ -186,10 +182,10 @@ def display_dashboard(df, placeholder):
                             delta_color=delta_color
                         )
                         
-                        # Display sparkline with improved data handling
+                        # Display sparkline
                         try:
-                            if pd.notna(row['sparkline_prices']):
-                                fig = create_sparkline(row['sparkline_prices'], row['id'])
+                            if pd.notna(row.get('price_30d')):
+                                fig = create_sparkline(row['price_30d'], row['id'])
                                 if fig:
                                     with st.container():
                                         st.plotly_chart(
@@ -202,7 +198,7 @@ def display_dashboard(df, placeholder):
                                             key=f"sparkline_{row['id']}_{i}_{j}"
                                         )
                         except Exception as e:
-                            st.write(f"Error displaying sparkline: {str(e)}")
+                            st.write(f"Error: {str(e)}")
 
         # Market cap visualization
         st.subheader("Market Cap Comparison")
@@ -234,7 +230,7 @@ async def main():
         if df is not None:
             display_dashboard(df, dashboard_placeholder)
         
-        # Wait for 5 minutes before updating to respect API rate limits
+        # Update every 5 minutes
         await asyncio.sleep(300)
 
 if __name__ == "__main__":
