@@ -62,6 +62,9 @@ st.markdown("""
     /* Remove any fixed width from the chart wrapper */
     .js-plotly-plot, .plot-container {
         width: 100% !important;
+    }    
+    .svg-container{
+        min-width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
