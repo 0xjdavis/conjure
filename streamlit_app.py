@@ -6,14 +6,19 @@ import asyncio
 import time
 from datetime import datetime
 
+st.set_page_config(layout="wide")
+
 # Custom CSS for simple card border
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
+        align-items: center;
         background-color: #ffffff;
         border: 10px solid #ffffff;
         border-radius: 10px;
         color: #000000;
+        display: flex;
+        justify-content: center;
         height: auto;
         margin: 0;
         padding: 0;
@@ -137,5 +142,4 @@ async def main():
 
 # Run the app
 if __name__ == "__main__":
-    st.set_page_config(layout="wide")
     asyncio.run(main())
