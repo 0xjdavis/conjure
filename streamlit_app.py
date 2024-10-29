@@ -18,12 +18,11 @@ st.markdown("""
         border: 10px solid #ffffff;
         border-radius: 10px;
         color: #000000;
-        display: flex;
+        display: flexbox;
         justify-content: center;
         height: auto;
         margin: 0;
         padding: 0;
-        text-align:center;
         width:180px;
     }
 </style>
