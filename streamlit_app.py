@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 # Enhanced CSS for better card styling and full-width sparklines
 st.markdown("""
 <style>
-        div[data-testid="stVerticalBlock"] {
+    div[data-testid="stVerticalBlock"] {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -35,6 +35,27 @@ st.markdown("""
         min-width: 150px;
         gap: 0.5rem;
         overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    /* Price change border classes */
+    .change-up-3 {
+        border: 4px solid #00ff00 !important;
+    }
+    .change-down-3 {
+        border: 4px solid #ff0000 !important;
+    }
+    .change-up-6 {
+        border: 7px solid #00ff00 !important;
+    }
+    .change-down-6 {
+        border: 7px solid #ff0000 !important;
+    }
+    .change-up-9 {
+        border: 10px solid #00ff00 !important;
+    }
+    .change-down-9 {
+        border: 10px solid #ff0000 !important;
     }
     
     /* Center the image container */
@@ -179,6 +200,20 @@ def create_sparkline(sparkline_data, coin_id):
     
     return fig
 
+def get_price_change_class(price_change):
+    """Determine the CSS class based on price change percentage"""
+    if price_change is None:
+        return ""
+    
+    abs_change = abs(price_change)
+    if abs_change >= 9:
+        return "change-up-9" if price_change >= 0 else "change-down-9"
+    elif abs_change >= 6:
+        return "change-up-6" if price_change >= 0 else "change-down-6"
+    elif abs_change >= 3:
+        return "change-up-3" if price_change >= 0 else "change-down-3"
+    return ""
+
 def display_dashboard(df, placeholder):
     with placeholder.container():
         st.title("Crypto Dashboard")
@@ -195,6 +230,13 @@ def display_dashboard(df, placeholder):
                 if i + j < len(df):
                     row = df.iloc[i + j]
                     with cols[j]:
+                        # Get the appropriate CSS class based on price change
+                        price_change_class = get_price_change_class(row['price_change_percentage_24h'])
+                        
+                        # Create a container with dynamic class
+                        container_html = f'<div class="custom-card {price_change_class}">'
+                        st.markdown(container_html, unsafe_allow_html=True)
+                        
                         # Create a container for better alignment
                         with st.container():
                             # Display logo
@@ -220,13 +262,12 @@ def display_dashboard(df, placeholder):
                                 delta_color=delta_color
                             )
                             
-                            # Display sparkline in a container that takes full width
+                            # Display sparkline
                             try:
                                 sparkline_data = row.get('sparkline_in_7d')
                                 if sparkline_data is not None:
                                     fig = create_sparkline(sparkline_data, row['id'])
                                     if fig:
-                                        # Generate a unique key using timestamp, position, and coin id
                                         unique_key = f"sparkline_{row['id']}_{i}_{j}_{int(datetime.now().timestamp())}"
                                         st.plotly_chart(
                                             fig,
@@ -240,6 +281,9 @@ def display_dashboard(df, placeholder):
                                         )
                             except Exception as e:
                                 st.write(f"Error displaying sparkline: {str(e)}")
+                        
+                        # Close the custom card div
+                        st.markdown('</div>', unsafe_allow_html=True)
 
         # Market cap visualization
         st.subheader("Market Cap Comparison")
