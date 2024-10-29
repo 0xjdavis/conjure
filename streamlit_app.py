@@ -22,41 +22,46 @@ st.markdown("""
         padding: 0 20px;
         box-sizing: border-box;
     }
-    div[data-testid="stColumn"] {
+    
+    /* Base card styling */
+    [data-testid="column"] {
         background-color: #ffffff;
         border: 1px solid #e1e4e8;
-        border-spacing: 9px;
         border-radius: 10px;
-        color: #000000;
         padding: 1.5rem 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         min-width: 150px;
-        gap: 0.5rem;
-        overflow: hidden;
         transition: all 0.3s ease;
     }
     
     /* Price change border classes */
-    .change-up-3 {
-        border: 4px solid #00ff00 !important;
+    [data-testid="column"].change-up-3 {
+        border: 4px solid rgba(0, 255, 0, 0.5) !important;
+        border-radius: 10px !important;
     }
-    .change-down-3 {
-        border: 4px solid #ff0000 !important;
+    
+    [data-testid="column"].change-down-3 {
+        border: 4px solid rgba(255, 0, 0, 0.5) !important;
+        border-radius: 10px !important;
     }
-    .change-up-6 {
-        border: 7px solid #00ff00 !important;
+    
+    [data-testid="column"].change-up-6 {
+        border: 7px solid rgba(0, 255, 0, 0.6) !important;
+        border-radius: 10px !important;
     }
-    .change-down-6 {
-        border: 7px solid #ff0000 !important;
+    
+    [data-testid="column"].change-down-6 {
+        border: 7px solid rgba(255, 0, 0, 0.6) !important;
+        border-radius: 10px !important;
     }
-    .change-up-9 {
-        border: 10px solid #00ff00 !important;
+    
+    [data-testid="column"].change-up-9 {
+        border: 10px solid rgba(0, 255, 0, 0.7) !important;
+        border-radius: 10px !important;
     }
-    .change-down-9 {
-        border: 10px solid #ff0000 !important;
+    
+    [data-testid="column"].change-down-9 {
+        border: 10px solid rgba(255, 0, 0, 0.7) !important;
+        border-radius: 10px !important;
     }
     
     /* Center the image container */
@@ -230,13 +235,14 @@ def display_dashboard(df, placeholder):
             for j in range(cols_per_row):
                 if i + j < len(df):
                     row = df.iloc[i + j]
+                    
+                    # Get the appropriate CSS class based on price change
+                    price_change_class = get_price_change_class(row['price_change_percentage_24h'])
+                    
+                    # Apply the class to the column
                     with cols[j]:
-                        # Get the appropriate CSS class based on price change
-                        price_change_class = get_price_change_class(row['price_change_percentage_24h'])
-                        
-                        # Create a container with dynamic class
-                        container_html = f'<div class="custom-card {price_change_class}">'
-                        st.markdown(container_html, unsafe_allow_html=True)
+                        # Inject custom HTML to apply the class
+                        st.markdown(f'<div class="{price_change_class}">', unsafe_allow_html=True)
                         
                         # Create a container for better alignment
                         with st.container():
@@ -283,7 +289,7 @@ def display_dashboard(df, placeholder):
                             except Exception as e:
                                 st.write(f"Error displaying sparkline: {str(e)}")
                         
-                        # Close the custom card div
+                        # Close the custom div
                         st.markdown('</div>', unsafe_allow_html=True)
 
         # Market cap visualization
