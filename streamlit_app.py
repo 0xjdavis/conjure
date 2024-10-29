@@ -226,6 +226,8 @@ def display_dashboard(df, placeholder):
                                 if sparkline_data is not None:
                                     fig = create_sparkline(sparkline_data, row['id'])
                                     if fig:
+                                        # Generate a unique key using timestamp, position, and coin id
+                                        unique_key = f"sparkline_{row['id']}_{i}_{j}_{int(datetime.now().timestamp())}"
                                         st.plotly_chart(
                                             fig,
                                             use_container_width=True,
@@ -234,7 +236,7 @@ def display_dashboard(df, placeholder):
                                                 'staticPlot': True,
                                                 'responsive': True
                                             },
-                                            key=f"sparkline_{row['id']}_{i}_{j}"
+                                            key=unique_key
                                         )
                             except Exception as e:
                                 st.write(f"Error displaying sparkline: {str(e)}")
