@@ -7,7 +7,7 @@ import asyncio
 import time
 from datetime import datetime, timedelta
 
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 # Custom CSS for simple card border
 st.markdown("""
