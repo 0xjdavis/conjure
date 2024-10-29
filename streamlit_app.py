@@ -11,8 +11,9 @@ st.markdown("""
 <style>
     div[data-testid="stColumn"] {
         background-color: #ffffff;
-        border: 10px solid #ff0000;
+        border: 10px solid #ffffff;
         border-radius: 10px;
+        color: #000000;
         margin: 0.2rem;
         padding: 1rem;
         text-align: center;
