@@ -12,6 +12,7 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
     div[data-testid="stVerticalBlock"] {
+        display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
