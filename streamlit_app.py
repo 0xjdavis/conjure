@@ -3,8 +3,8 @@ import pandas as pd
 import plotly.express as px
 import aiohttp
 import asyncio
-from asyncio import TimeoutError
-import json
+import time
+from datetime import datetime
 
 # Custom CSS for simple card border
 st.markdown("""
@@ -21,6 +21,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state
+if 'crypto_data' not in st.session_state:
+    st.session_state.crypto_data = None
+if 'last_update' not in st.session_state:
+    st.session_state.last_update = None
+
 async def fetch_crypto_data():
     url = 'https://api.coingecko.com/api/v3/coins/markets'
     params = {
@@ -28,7 +34,7 @@ async def fetch_crypto_data():
         'order': 'market_cap_desc',
         'per_page': '100',
         'page': '1',
-        'sparkline': 'True'  # Changed to string 'false' instead of boolean False
+        'sparkline': 'false'
     }
     
     try:
@@ -40,23 +46,17 @@ async def fetch_crypto_data():
                 else:
                     st.error(f"API Error: Status code {response.status}")
                     return None
-    except TimeoutError:
-        st.error("Request timed out. Please try again.")
-        return None
     except Exception as e:
         st.error(f"Error fetching data: {str(e)}")
         return None
 
-# Create async function to run the entire app
-async def run_app():
-    # Fetch data asynchronously
-    df = await fetch_crypto_data()
-    
-    if df is None:
-        st.stop()
-    
+def display_dashboard(df):
     # Streamlit UI
     st.title("Crypto Dashboard")
+    
+    # Display last update time
+    if st.session_state.last_update:
+        st.caption(f"Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Create container for metrics
     metrics_container = st.container()
@@ -113,14 +113,29 @@ async def run_app():
     fig.update_xaxes(tickformat="$.2s")
     st.plotly_chart(fig, use_container_width=True)
 
-# Run the async app
-if __name__ == "__main__":
-    # Get or create event loop
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+async def main():
+    # Add a refresh button
+    if st.button("Refresh Data"):
+        st.session_state.crypto_data = None
     
-    # Run the async app
-    loop.run_until_complete(run_app())
+    # Fetch new data if needed
+    if st.session_state.crypto_data is None:
+        with st.spinner("Fetching cryptocurrency data..."):
+            st.session_state.crypto_data = await fetch_crypto_data()
+            st.session_state.last_update = datetime.now()
+            
+    # Display dashboard if we have data
+    if st.session_state.crypto_data is not None:
+        display_dashboard(st.session_state.crypto_data)
+    
+    # Schedule next update
+    if st.session_state.crypto_data is not None:
+        time_since_update = (datetime.now() - st.session_state.last_update).seconds
+        if time_since_update >= 60:  # Update every minute
+            st.session_state.crypto_data = None
+            st.experimental_rerun()
+
+# Run the app
+if __name__ == "__main__":
+    st.set_page_config(layout="wide")
+    asyncio.run(main())
