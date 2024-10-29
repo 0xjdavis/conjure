@@ -3,14 +3,26 @@ import pandas as pd
 import plotly.express as px
 import requests
 
-# Add custom CSS for card styling
+# Custom CSS for card styling
 st.markdown("""
 <style>
-    .crypto-card {
+    [data-testid="stVerticalBlock"] {
+        background-color: white;
         border: 1px solid #e1e4e8;
         border-radius: 10px;
         padding: 1rem;
         margin: 0.5rem;
+    }
+    
+    /* Remove default container padding to prevent double padding */
+    [data-testid="stHorizontalBlock"] {
+        padding: 0 !important;
+        gap: 0.5rem !important;
+    }
+    
+    /* Ensure metrics are properly spaced */
+    [data-testid="metric-container"] {
+        margin: 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -27,7 +39,7 @@ params = {
 
 try:
     response = requests.get(url, params=params)
-    response.raise_for_status()  # Check for HTTP errors
+    response.raise_for_status()
     data = response.json()
     df = pd.DataFrame(data)
 except requests.exceptions.RequestException as e:
@@ -37,28 +49,25 @@ except requests.exceptions.RequestException as e:
 # Streamlit UI
 st.title("Crypto Dashboard")
 
-# Create container for metrics
-metrics_container = st.container()
-
-# 4 cards per row
-cols_per_row = 4
-for i in range(0, len(df), cols_per_row):
-    cols = metrics_container.columns(cols_per_row)
-    for j in range(cols_per_row):
-        if i + j < len(df):
-            row = df.iloc[i + j]
-            with cols[j]:
-                # Create a card container with border
-                st.markdown('<div class="crypto-card">', unsafe_allow_html=True)
+# Process data in chunks of 4 for each row
+for i in range(0, len(df), 4):
+    row_data = df.iloc[i:i+4]
+    
+    # Create a row container
+    cols = st.columns(4)
+    
+    # Fill each column with a card
+    for idx, (_, row) in enumerate(row_data.iterrows()):
+        with cols[idx]:
+            with st.container():
+                # Center the image
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    if pd.notna(row["image"]):
+                        st.image(row["image"], width=50)
                 
-                # Display logo first
-                if pd.notna(row["image"]):
-                    st.image(row["image"], width=50)
-                
-                # Format price with appropriate decimal places
+                # Format price and change
                 price = f"${row['current_price']:,.2f}"
-                
-                # Handle None values in price change
                 if pd.notna(row['price_change_percentage_24h']):
                     change = f"{row['price_change_percentage_24h']:.2f}%"
                     delta_color = "normal"
@@ -66,16 +75,16 @@ for i in range(0, len(df), cols_per_row):
                     change = "N/A"
                     delta_color = "normal"
                 
-                # Display metric below logo
+                # Display metric
                 st.metric(
                     label=row["name"],
                     value=price,
                     delta=change,
                     delta_color=delta_color
                 )
-                
-                # Close the card container
-                st.markdown('</div>', unsafe_allow_html=True)
+
+# Add some space before the chart
+st.markdown("---")
 
 # Create market cap visualization
 st.subheader("Market Cap Comparison")
@@ -88,7 +97,6 @@ fig = px.bar(
     labels={"market_cap": "Market Cap (USD)", "name": "Cryptocurrency"}
 )
 
-# Update layout for better visualization
 fig.update_layout(
     height=600,
     xaxis_title="Market Cap (USD)",
@@ -96,7 +104,5 @@ fig.update_layout(
     showlegend=False
 )
 
-# Format market cap values
 fig.update_xaxes(tickformat="$.2s")
-
 st.plotly_chart(fig, use_container_width=True)
