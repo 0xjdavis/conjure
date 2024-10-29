@@ -138,7 +138,7 @@ async def main():
         time_since_update = (datetime.now() - st.session_state.last_update).seconds
         if time_since_update >= 60:  # Update every minute
             st.session_state.crypto_data = None
-            st.experimental_rerun()
+            st.rerun()
 
 # Run the app
 if __name__ == "__main__":
