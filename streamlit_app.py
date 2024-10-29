@@ -8,7 +8,7 @@ from datetime import datetime
 
 st.set_page_config(layout="wide")
 
-# Updated CSS for better card and sparkline container handling
+# Custom CSS for card styling
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
@@ -54,7 +54,12 @@ async def fetch_crypto_data():
             async with session.get(url, params=params, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return pd.DataFrame(data)
+                    df = pd.DataFrame(data)
+                    # Verify sparkline data is properly loaded
+                    if 'sparkline_in_7d' in df.columns:
+                        # Extract price data from sparkline dictionary
+                        df['sparkline_prices'] = df['sparkline_in_7d'].apply(lambda x: x.get('price', []) if isinstance(x, dict) else [])
+                    return df
                 else:
                     st.error(f"API Error: Status code {response.status}")
                     return None
@@ -66,7 +71,7 @@ def create_sparkline(prices, coin_id):
     if not prices or len(prices) < 2:
         return None
     
-    # Calculate price change for color
+    # Calculate price change for this specific crypto
     price_change = prices[-1] - prices[0]
     line_color = '#00ff00' if price_change >= 0 else '#ff0000'
     
@@ -150,23 +155,29 @@ def display_dashboard(df, placeholder):
                             delta_color=delta_color
                         )
                         
-                        # Display sparkline with improved error handling
+                        # Display sparkline with improved data handling
                         try:
-                            sparkline_data = row['sparkline_in_7d'].get('price', [])
-                            if sparkline_data and len(sparkline_data) > 1:
-                                fig = create_sparkline(sparkline_data, row['id'])
+                            # Get the specific crypto's price history
+                            sparkline_prices = row['sparkline_prices']
+                            
+                            if isinstance(sparkline_prices, list) and len(sparkline_prices) > 1:
+                                fig = create_sparkline(sparkline_prices, row['id'])
                                 if fig:
                                     with st.container():
+                                        # Use unique key for each crypto's sparkline
                                         st.plotly_chart(
                                             fig,
                                             use_container_width=True,
                                             config={
                                                 'displayModeBar': False,
                                                 'staticPlot': True
-                                            }
+                                            },
+                                            key=f"sparkline_{row['id']}_{i}_{j}"
                                         )
-                        except (AttributeError, KeyError) as e:
-                            st.write("No sparkline data available")
+                            else:
+                                st.write("Insufficient price data")
+                        except Exception as e:
+                            st.write(f"Error displaying sparkline: {str(e)}")
 
         # Market cap visualization
         st.subheader("Market Cap Comparison")
