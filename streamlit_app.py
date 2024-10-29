@@ -32,6 +32,7 @@ if 'crypto_data' not in st.session_state:
 if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 
+
 async def fetch_crypto_data():
     url = 'https://api.coingecko.com/api/v3/coins/markets'
     params = {
@@ -55,91 +56,84 @@ async def fetch_crypto_data():
         st.error(f"Error fetching data: {str(e)}")
         return None
 
-def display_dashboard(df):
-    # Streamlit UI
-    st.title("Crypto Dashboard")
-    
-    # Display last update time
-    if st.session_state.last_update:
-        st.caption(f"Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')}")
+def display_dashboard(df, placeholder):
+    with placeholder.container():
+        # Streamlit UI
+        st.title("Crypto Dashboard")
+        
+        # Display last update time
+        st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Create container for metrics
-    metrics_container = st.container()
+        # Create container for metrics
+        metrics_container = st.container()
 
-    # 4 cards per row
-    cols_per_row = 4
-    for i in range(0, len(df), cols_per_row):
-        cols = metrics_container.columns(cols_per_row)
-        for j in range(cols_per_row):
-            if i + j < len(df):
-                row = df.iloc[i + j]
-                with cols[j]:
-                    # Display logo first
-                    if pd.notna(row["image"]):
-                        st.image(row["image"], width=50)
-                    
-                    # Format price with appropriate decimal places
-                    price = f"${row['current_price']:,.2f}"
-                    
-                    # Handle None values in price change
-                    if pd.notna(row['price_change_percentage_24h']):
-                        change = f"{row['price_change_percentage_24h']:.2f}%"
-                        delta_color = "normal"
-                    else:
-                        change = "N/A"
-                        delta_color = "normal"
-                    
-                    # Display metric below logo
-                    st.metric(
-                        label=row["name"],
-                        value=price,
-                        delta=change,
-                        delta_color=delta_color
-                    )
+        # 4 cards per row
+        cols_per_row = 4
+        for i in range(0, len(df), cols_per_row):
+            cols = metrics_container.columns(cols_per_row)
+            for j in range(cols_per_row):
+                if i + j < len(df):
+                    row = df.iloc[i + j]
+                    with cols[j]:
+                        # Display logo first
+                        if pd.notna(row["image"]):
+                            st.image(row["image"], width=50)
+                        
+                        # Format price with appropriate decimal places
+                        price = f"${row['current_price']:,.2f}"
+                        
+                        # Handle None values in price change
+                        if pd.notna(row['price_change_percentage_24h']):
+                            change = f"{row['price_change_percentage_24h']:.2f}%"
+                            delta_color = "normal"
+                        else:
+                            change = "N/A"
+                            delta_color = "normal"
+                        
+                        # Display metric below logo
+                        st.metric(
+                            label=row["name"],
+                            value=price,
+                            delta=change,
+                            delta_color=delta_color
+                        )
 
-    # Create market cap visualization
-    st.subheader("Market Cap Comparison")
-    fig = px.bar(
-        df.sort_values("market_cap", ascending=True).tail(20),
-        x="market_cap",
-        y="name",
-        orientation='h',
-        title="Top 20 Cryptocurrencies by Market Cap",
-        labels={"market_cap": "Market Cap (USD)", "name": "Cryptocurrency"}
-    )
+        # Create market cap visualization
+        st.subheader("Market Cap Comparison")
+        fig = px.bar(
+            df.sort_values("market_cap", ascending=True).tail(20),
+            x="market_cap",
+            y="name",
+            orientation='h',
+            title="Top 20 Cryptocurrencies by Market Cap",
+            labels={"market_cap": "Market Cap (USD)", "name": "Cryptocurrency"}
+        )
 
-    fig.update_layout(
-        height=600,
-        xaxis_title="Market Cap (USD)",
-        yaxis_title="Cryptocurrency",
-        showlegend=False
-    )
+        fig.update_layout(
+            height=600,
+            xaxis_title="Market Cap (USD)",
+            yaxis_title="Cryptocurrency",
+            showlegend=False
+        )
 
-    fig.update_xaxes(tickformat="$.2s")
-    st.plotly_chart(fig, use_container_width=True)
+        fig.update_xaxes(tickformat="$.2s")
+        st.plotly_chart(fig, use_container_width=True)
 
 async def main():
-    # Add a refresh button
-    if st.button("Refresh Data"):
-        st.session_state.crypto_data = None
+    # Create a placeholder for the entire dashboard
+    dashboard_placeholder = st.empty()
     
-    # Fetch new data if needed
-    if st.session_state.crypto_data is None:
-        with st.spinner("Fetching cryptocurrency data..."):
-            st.session_state.crypto_data = await fetch_crypto_data()
-            st.session_state.last_update = datetime.now()
-            
-    # Display dashboard if we have data
-    if st.session_state.crypto_data is not None:
-        display_dashboard(st.session_state.crypto_data)
-    
-    # Schedule next update
-    if st.session_state.crypto_data is not None:
-        time_since_update = (datetime.now() - st.session_state.last_update).seconds
-        if time_since_update >= 60:  # Update every minute
-            st.session_state.crypto_data = None
-            st.rerun()
+    while True:
+        # Fetch new data
+        df = await fetch_crypto_data()
+        
+        if df is not None:
+            # Update the dashboard with new data
+            display_dashboard(df, dashboard_placeholder)
+        
+        # Wait for 60 seconds before next update
+        await asyncio.sleep(60)
 
-# Run the app
+# Run the async app
 if __name__ == "__main__":
     asyncio.run(main())
