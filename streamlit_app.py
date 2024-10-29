@@ -13,13 +13,10 @@ from datetime import datetime, timedelta
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
-        align-items: center;
         background-color: #ffffff;
         border: 10px solid #ffffff;
         border-radius: 10px;
         color: #000000;
-        display: flex;
-        justify-content: center;
         height: auto;
         margin: 0;
         max-width:150px
