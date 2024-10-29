@@ -42,8 +42,7 @@ for i in range(0, len(df), cols_per_row):
                 # Handle None values in price change
                 if pd.notna(row['price_change_percentage_24h']):
                     change = f"{row['price_change_percentage_24h']:.2f}%"
-                    delta_color = "normal" if row['price_change_percentage_24h'] == 0 else \
-                                ("increase" if row['price_change_percentage_24h'] > 0 else "decrease")
+                    delta_color = "normal"  # Changed from "increase"/"decrease" to "normal"
                 else:
                     change = "N/A"
                     delta_color = "normal"
