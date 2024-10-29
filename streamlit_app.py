@@ -93,8 +93,12 @@ async def fetch_crypto_data():
         st.error(f"Error fetching data: {str(e)}")
         return None
 
-def create_sparkline(prices, coin_id):
-    if not prices:
+def create_sparkline(sparkline_data, coin_id):
+    if not sparkline_data or not isinstance(sparkline_data, dict) or 'price' not in sparkline_data:
+        return None
+    
+    prices = sparkline_data['price']
+    if not prices or len(prices) == 0:
         return None
         
     fig = go.Figure()
@@ -115,8 +119,8 @@ def create_sparkline(prices, coin_id):
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        height=40,
-        width=120,
+        height=50,  # Increased height for better visibility
+        width=150,  # Increased width for better visibility
         yaxis={
             'visible': False,
             'showgrid': False,
@@ -133,8 +137,6 @@ def create_sparkline(prices, coin_id):
     )
     
     return fig
-
-    
 
 def display_dashboard(df, placeholder):
     with placeholder.container():
@@ -177,21 +179,21 @@ def display_dashboard(df, placeholder):
                         
                         # Display sparkline
                         try:
-                            if pd.notna(row.get('price_30d')):
-                                fig = create_sparkline(row['price_30d'], row['id'])
+                            sparkline_data = row.get('sparkline_in_7d')
+                            if sparkline_data is not None:
+                                fig = create_sparkline(sparkline_data, row['id'])
                                 if fig:
-                                    with st.container():
-                                        st.plotly_chart(
-                                            fig,
-                                            use_container_width=True,
-                                            config={
-                                                'displayModeBar': False,
-                                                'staticPlot': True
-                                            },
-                                            key=f"sparkline_{row['id']}_{i}_{j}"
-                                        )
+                                    st.plotly_chart(
+                                        fig,
+                                        use_container_width=True,
+                                        config={
+                                            'displayModeBar': False,
+                                            'staticPlot': True
+                                        },
+                                        key=f"sparkline_{row['id']}_{i}_{j}"
+                                    )
                         except Exception as e:
-                            st.write(f"Error: {str(e)}")
+                            st.write(f"Error displaying sparkline: {str(e)}")
 
         # Market cap visualization
         st.subheader("Market Cap Comparison")
