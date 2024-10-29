@@ -25,6 +25,7 @@ st.markdown("""
     div[data-testid="stColumn"] {
         background-color: #ffffff;
         border: 1px solid #e1e4e8;
+        border-spacing: 9px;
         border-radius: 10px;
         color: #000000;
         padding: 1.5rem 1rem;
