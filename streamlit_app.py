@@ -3,26 +3,15 @@ import pandas as pd
 import plotly.express as px
 import requests
 
-# Custom CSS for card styling
+# Custom CSS for simple card border
 st.markdown("""
 <style>
-    [data-testid="stVerticalBlock"] {
+    div[data-testid="column"] {
         background-color: white;
         border: 1px solid #e1e4e8;
         border-radius: 10px;
         padding: 1rem;
-        margin: 0.5rem;
-    }
-    
-    /* Remove default container padding to prevent double padding */
-    [data-testid="stHorizontalBlock"] {
-        padding: 0 !important;
-        gap: 0.5rem !important;
-    }
-    
-    /* Ensure metrics are properly spaced */
-    [data-testid="metric-container"] {
-        margin: 0 !important;
+        margin: 0.2rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -49,25 +38,25 @@ except requests.exceptions.RequestException as e:
 # Streamlit UI
 st.title("Crypto Dashboard")
 
-# Process data in chunks of 4 for each row
-for i in range(0, len(df), 4):
-    row_data = df.iloc[i:i+4]
-    
-    # Create a row container
-    cols = st.columns(4)
-    
-    # Fill each column with a card
-    for idx, (_, row) in enumerate(row_data.iterrows()):
-        with cols[idx]:
-            with st.container():
-                # Center the image
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col2:
-                    if pd.notna(row["image"]):
-                        st.image(row["image"], width=50)
+# Create container for metrics
+metrics_container = st.container()
+
+# 4 cards per row
+cols_per_row = 4
+for i in range(0, len(df), cols_per_row):
+    cols = metrics_container.columns(cols_per_row)
+    for j in range(cols_per_row):
+        if i + j < len(df):
+            row = df.iloc[i + j]
+            with cols[j]:
+                # Display logo first
+                if pd.notna(row["image"]):
+                    st.image(row["image"], width=50)
                 
-                # Format price and change
+                # Format price with appropriate decimal places
                 price = f"${row['current_price']:,.2f}"
+                
+                # Handle None values in price change
                 if pd.notna(row['price_change_percentage_24h']):
                     change = f"{row['price_change_percentage_24h']:.2f}%"
                     delta_color = "normal"
@@ -75,16 +64,13 @@ for i in range(0, len(df), 4):
                     change = "N/A"
                     delta_color = "normal"
                 
-                # Display metric
+                # Display metric below logo
                 st.metric(
                     label=row["name"],
                     value=price,
                     delta=change,
                     delta_color=delta_color
                 )
-
-# Add some space before the chart
-st.markdown("---")
 
 # Create market cap visualization
 st.subheader("Market Cap Comparison")
