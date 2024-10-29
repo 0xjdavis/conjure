@@ -1,24 +1,4 @@
-streamlit
-asyncio
-pathlib
-
-llama_index
-llama_index.core
-# STORAGE
-llama_index.vector_stores.pinecone
-# LLM
-llama_index.llms.anthropic
-llama_index.llms.openai
-# EMBEDDINGS
-#llama_index.embeddings.huggingface
-llama_index.embeddings.openai
-#llama_index.embeddings.base
-# WORKFLOW
-llama-index-utils-workflow
-
-# ARIZE PHOENIX
-llama-index-callbacks-arize-phoenix
-
-#PDF
-fpdf
-datetime 
+streamlit==1.16.0
+pandas==1.5.2
+plotly==5.13.0
+requests==2.28.2
