@@ -32,6 +32,31 @@ if 'crypto_data' not in st.session_state:
 if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import aiohttp
+import asyncio
+from datetime import datetime, timedelta
+
+# Page config
+st.set_page_config(layout="wide")
+
+# Custom CSS for simple card border
+st.markdown("""
+<style>
+    div[data-testid="stColumn"] {
+        background-color: #ffffff;
+        border: 10px solid #ffffff;
+        border-radius: 10px;
+        color: #000000;
+        height: auto;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 async def fetch_historical_prices(session, coin_id):
     days = '30'
@@ -60,7 +85,7 @@ async def fetch_crypto_data():
         'order': 'market_cap_desc',
         'per_page': '100',
         'page': '1',
-        'sparkline': 'True'
+        'sparkline': 'false'
     }
     
     try:
@@ -153,7 +178,7 @@ def display_dashboard(df, historical_data, placeholder):
                         
                         # Display metric below logo
                         st.metric(
-                            label=row["symbol"],
+                            label=row["name"],
                             value=price,
                             delta=change,
                             delta_color=delta_color
@@ -165,7 +190,13 @@ def display_dashboard(df, historical_data, placeholder):
                                 historical_data[row['id']], 
                                 row['current_price']
                             )
-                            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                            # Add unique key for each chart
+                            st.plotly_chart(
+                                fig, 
+                                use_container_width=True, 
+                                config={'displayModeBar': False},
+                                key=f"sparkline_{row['id']}"
+                            )
 
         # Create market cap visualization
         st.subheader("Market Cap Comparison")
@@ -186,7 +217,8 @@ def display_dashboard(df, historical_data, placeholder):
         )
 
         fig.update_xaxes(tickformat="$.2s")
-        st.plotly_chart(fig, use_container_width=True)
+        # Add unique key for market cap chart
+        st.plotly_chart(fig, use_container_width=True, key="market_cap_chart")
 
 async def main():
     # Create a placeholder for the entire dashboard
@@ -205,4 +237,4 @@ async def main():
 
 # Run the async app
 if __name__ == "__main__":
-    asyncio.run(main()
+    asyncio.run(main())
