@@ -22,8 +22,8 @@ st.markdown("""
         justify-content: center;
         height: auto;
         margin: 0;
+        max-width:150px
         padding: 0;
-        width:180px;
     }
 </style>
 """, unsafe_allow_html=True)
