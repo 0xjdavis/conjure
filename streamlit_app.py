@@ -8,7 +8,7 @@ from datetime import datetime
 
 st.set_page_config(layout="wide")
 
-# Enhanced CSS for better card styling and centering
+# Enhanced CSS for better card styling and full-width sparklines
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
@@ -42,38 +42,24 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     
-    /* Center metric label text */
-    div[data-testid="stMetricLabel"] {
-        text-align: center;
-        width: 100%;
-    }
-    
-    /* Center metric value */
-    div[data-testid="stMetricValue"] {
-        text-align: center;
-        width: 100%;
-    }
-    
-    /* Sparkline container styling */
-    .sparkline-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 60px;
-        margin: 0 auto;
-    }
-    
-    /* Adjust spacing between elements */
-    .element-container {
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Custom styling for plotly charts in cards */
+    /* Make Plotly charts expand full width */
     div[data-testid="stColumn"] .stPlotlyChart {
-        display: flex;
-        justify-content: center;
-        width: 100%;
+        width: 100% !important;
+    }
+    
+    /* Ensure the Plotly chart container takes full width */
+    div[data-testid="stColumn"] .stPlotlyChart > div {
+        width: 100% !important;
+    }
+    
+    /* Adjust the SVG within Plotly charts to full width */
+    div[data-testid="stColumn"] .stPlotlyChart svg {
+        width: 100% !important;
+    }
+    
+    /* Remove any fixed width from the chart wrapper */
+    .js-plotly-plot, .plot-container {
+        width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -153,13 +139,13 @@ def create_sparkline(sparkline_data, coin_id):
         showlegend=False
     ))
     
-    # Set the layout to be minimal
+    # Set the layout to be minimal and responsive
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        height=50,
-        width=150,
+        height=50,  # Keep fixed height for consistency
+        autosize=True,  # Enable autosize for responsive width
         yaxis={
             'visible': False,
             'showgrid': False,
@@ -218,7 +204,7 @@ def display_dashboard(df, placeholder):
                                 delta_color=delta_color
                             )
                             
-                            # Display sparkline
+                            # Display sparkline in a container that takes full width
                             try:
                                 sparkline_data = row.get('sparkline_in_7d')
                                 if sparkline_data is not None:
@@ -229,7 +215,8 @@ def display_dashboard(df, placeholder):
                                             use_container_width=True,
                                             config={
                                                 'displayModeBar': False,
-                                                'staticPlot': True
+                                                'staticPlot': True,
+                                                'responsive': True
                                             },
                                             key=f"sparkline_{row['id']}_{i}_{j}"
                                         )
