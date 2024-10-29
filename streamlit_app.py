@@ -8,18 +8,23 @@ from datetime import datetime
 
 st.set_page_config(layout="wide")
 
-# Custom CSS for simple card border
+# Custom CSS for simple card border and sparkline container
 st.markdown("""
 <style>
     div[data-testid="stColumn"] {
         background-color: #ffffff;
-        border: 10px solid #ffffff;
+        border: 1px solid #e1e4e8;
         border-radius: 10px;
         color: #000000;
         height: auto;
         margin: 0;
-        padding: 0;
+        padding: 1rem;
         text-align: center;
+    }
+    
+    .sparkline-container {
+        margin: 10px 0;
+        padding: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -31,8 +36,7 @@ async def fetch_crypto_data():
         'order': 'market_cap_desc',
         'per_page': '100',
         'page': '1',
-        'sparkline': 'true',  # Changed to true to get sparkline data directly
-        'price_change_percentage': '30d'
+        'sparkline': 'true'
     }
     
     try:
@@ -40,8 +44,7 @@ async def fetch_crypto_data():
             async with session.get(url, params=params, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
-                    df = pd.DataFrame(data)
-                    return df
+                    return pd.DataFrame(data)
                 else:
                     st.error(f"API Error: Status code {response.status}")
                     return None
@@ -49,49 +52,50 @@ async def fetch_crypto_data():
         st.error(f"Error fetching data: {str(e)}")
         return None
 
-def create_sparkline(sparkline_data):
+def create_sparkline(prices, coin_id):
+    if not prices:
+        return None
+        
     fig = go.Figure()
-    
-    # Create x-axis points (7 days worth of data)
-    x_points = list(range(len(sparkline_data)))
     
     # Add price line
     fig.add_trace(go.Scatter(
-        x=x_points,
-        y=sparkline_data,
-        line=dict(color='rgb(49, 130, 189)', width=1),
+        y=prices,
+        mode='lines',
+        line=dict(
+            color='#3366cc',
+            width=1.5
+        ),
         showlegend=False
     ))
     
-    # Update layout for minimal appearance
+    # Set the layout to be minimal
     fig.update_layout(
-        height=50,  # Reduced height
-        width=150,  # Fixed width
-        margin=dict(l=0, r=0, t=0, b=0, pad=0),
+        margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        yaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            showticklabels=False,
-            fixedrange=True
-        ),
-        xaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            showticklabels=False,
-            fixedrange=True
-        )
+        height=40,
+        width=120,
+        yaxis={
+            'visible': False,
+            'showgrid': False,
+            'zeroline': False,
+            'showticklabels': False,
+        },
+        xaxis={
+            'visible': False,
+            'showgrid': False,
+            'zeroline': False,
+            'showticklabels': False,
+        },
+        hovermode=False
     )
     
     return fig
 
 def display_dashboard(df, placeholder):
     with placeholder.container():
-        # Streamlit UI
         st.title("Crypto Dashboard")
-        
-        # Display last update time
         st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         # Create container for metrics
@@ -128,18 +132,23 @@ def display_dashboard(df, placeholder):
                             delta_color=delta_color
                         )
                         
-                        # Create sparkline from the sparkline data
-                        if pd.notna(row['sparkline_in_7d']) and row['sparkline_in_7d'].get('price'):
-                            fig = create_sparkline(row['sparkline_in_7d']['price'])
-                            st.plotly_chart(
-                                fig, 
-                                use_container_width=False,  # Changed to False
-                                config={
-                                    'displayModeBar': False,
-                                    'staticPlot': True  # Make the plot static
-                                },
-                                key=f"sparkline_{row['id']}"
-                            )
+                        # Display sparkline if data is available
+                        try:
+                            sparkline_data = row['sparkline_in_7d'].get('price', [])
+                            if sparkline_data:
+                                fig = create_sparkline(sparkline_data, row['id'])
+                                if fig:
+                                    st.plotly_chart(
+                                        fig,
+                                        use_container_width=False,
+                                        config={
+                                            'displayModeBar': False,
+                                            'staticPlot': True
+                                        },
+                                        key=f"sparkline_{row['id']}"
+                                    )
+                        except (AttributeError, KeyError):
+                            pass
 
         # Create market cap visualization
         st.subheader("Market Cap Comparison")
