@@ -18,7 +18,7 @@ st.markdown("""
         border: 10px solid #ffffff;
         border-radius: 10px;
         color: #000000;
-        display: flexbox;
+        display: flex;
         justify-content: center;
         height: auto;
         margin: 0;
