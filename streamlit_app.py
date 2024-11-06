@@ -161,7 +161,7 @@ def display_dashboard(df):
             background-color: white;
             border-radius: 10px;
             padding: 0;
-            margin: 0;
+            margin: 5px 0;
             text-align: center;
             max-width: 200px;
         }
