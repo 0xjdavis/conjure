@@ -15,30 +15,64 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
-# Custom styling
+# Custom styling with centered content
 st.markdown("""
 <style>
     .crypto-card {
         background-color: #f0f2f6;
         border-radius: 8px;
-        padding: 10px;
+        padding: 15px;
         margin: 5px;
+        text-align: center;
     }
     .stMetric {
         margin-bottom: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Center metric label */
+    .stMetric > div:first-child {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    /* Center metric value */
+    .stMetric > div:nth-child(2) {
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
     .chart-container {
         margin-top: -15px;
+        display: flex;
+        justify-content: center;
     }
     .stPlotlyChart {
         width: 100% !important;
+        margin: 0 auto;
     }
+    /* Center images */
+    .element-container img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    /* Center column contents */
+    [data-testid="column"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    /* Error and info messages */
     .error-message {
         color: #ff4b4b;
         padding: 10px;
         border-radius: 5px;
         background-color: #ffe5e5;
         margin: 10px 0;
+        text-align: center;
     }
     .info-message {
         color: #31708f;
@@ -46,6 +80,28 @@ st.markdown("""
         border-radius: 5px;
         background-color: #d9edf7;
         margin: 10px 0;
+        text-align: center;
+    }
+    /* Center metric delta */
+    .stMetric > div:last-child {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    /* Container styling */
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    /* Header styling */
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    /* Caption styling */
+    .stCaption {
+        text-align: center;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -58,7 +114,6 @@ class RateLimiter:
         
     async def wait_if_needed(self):
         now = time.time()
-        # Remove old requests
         self.requests = [req_time for req_time in self.requests 
                         if now - req_time < self.time_window]
         
@@ -104,7 +159,6 @@ async def fetch_crypto_data():
     """Fetch cryptocurrency data with caching"""
     cache_key = 'crypto_data'
     
-    # Check cache first
     if cache_key in cache:
         return cache[cache_key]
     
@@ -112,7 +166,7 @@ async def fetch_crypto_data():
     params = {
         'vs_currency': 'usd',
         'order': 'market_cap_desc',
-        'per_page': '50',  # Reduced to prevent rate limiting
+        'per_page': '50',
         'page': '1',
         'sparkline': 'true'
     }
@@ -165,13 +219,17 @@ def create_sparkline(sparkline_data):
 
 def display_dashboard(df):
     """Display the cryptocurrency dashboard"""
+    st.markdown('<div class="dashboard-header">', unsafe_allow_html=True)
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if df is None or df.empty:
         st.error("No data available. Please try again later.")
         return
 
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    
     # Display crypto metrics in a grid
     cols_per_row = 4
     for i in range(0, len(df), cols_per_row):
@@ -230,6 +288,8 @@ def display_dashboard(df):
     )
     fig.update_xaxes(tickformat="$.2s")
     st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def main():
     """Main function to run the Streamlit app"""
