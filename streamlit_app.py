@@ -125,6 +125,9 @@ def create_sparkline(sparkline_data):
     )
     
     return fig
+
+
+
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -156,27 +159,30 @@ def display_dashboard(df):
             border_color = "#00ff00" if price_change >= 0 else "#ff0000"
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
-            # Add dynamic inline style with border properties
-            col.markdown(f"""
-                <div class="card" style="border: {border_width} solid {border_color};">
-                    <img src="{coin[1]["image"]}" width="30" />
-                    <h4>{coin[1]["name"]}</h4>
-                    <div>
-                        <strong>${coin[1]['current_price']:,.2f}</strong>
-                        <br />
-                        <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
-                            {price_change:.2f}%
-                        </span>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-            # Optional sparkline chart
-            if coin[1].get('sparkline_in_7d'):
-                fig = create_sparkline(coin[1]['sparkline_in_7d'])
-                if fig:
-                    col.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            with col:
+                # Use an st.container to keep everything inside the card border
+                with st.container():
+                    col.markdown(f'''
+                        <div class="card" style="border: {border_width} solid {border_color};">
+                            <img src="{coin[1]["image"]}" width="30" />
+                            <h4>{coin[1]["name"]}</h4>
+                            <div>
+                                <strong>${coin[1]['current_price']:,.2f}</strong>
+                                <br />
+                                <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
+                                    {price_change:.2f}%
+                                </span>
+                            </div>
+                    ''', unsafe_allow_html=True
+                    )
                     
+                    if coin[1].get('sparkline_in_7d'):
+                        fig = create_sparkline(coin[1]['sparkline_in_7d'])
+                        if fig:
+                            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    
+                    col.markdown("</div>", unsafe_allow_html=True)
+
 
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
