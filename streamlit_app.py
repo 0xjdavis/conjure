@@ -15,8 +15,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
-
-# Custom styling with centered content
+# Custom styling with centered content and fixed z-index issues
 st.markdown("""
 <style>
     .main-container {
@@ -48,15 +47,16 @@ st.markdown("""
         box-sizing: border-box;
     }
     
-    /* Card wrapper for proper containment */
+    /* Card wrapper with proper stacking context */
     .card-wrapper {
         position: relative;
         width: 100%;
         height: 100%;
         box-sizing: border-box;
+        z-index: 1;
     }
     
-    /* Card container with proper stacking context */
+    /* Card container with proper layering */
     .crypto-card {
         background-color: #ffffff;
         border-radius: 10px;
@@ -70,69 +70,93 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         align-items: center;
+        z-index: 2;
     }
     
-    /* Content container */
+    /* Content container with proper stacking */
     .card-content {
-        position: relative;
         width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 1;
+        z-index: 3;
+        position: relative;
     }
     
-    /* Fix for metric alignment */
+    /* Ensure metric is above background */
     div[data-testid="stMetric"] {
         width: 100%;
         text-align: center;
         position: relative;
-        z-index: 1;
+        z-index: 4;
+        background: transparent;
     }
     
     div[data-testid="stMetricValue"] {
         justify-content: center;
+        position: relative;
+        z-index: 4;
     }
     
-    /* Chart container fixes */
+    /* Chart container with proper z-index */
     .chart-container {
         width: 100%;
         margin-top: 0.5rem;
         position: relative;
-        z-index: 1;
+        z-index: 3;
     }
     
     .js-plotly-plot, .plot-container {
         width: 100% !important;
+        position: relative;
+        z-index: 3;
     }
     
-    /* Price change border classes */
+    /* Price change border classes with proper z-index */
     .change-up-3 {
         border: 2px solid #00ff00 !important;
+        z-index: 1;
     }
     .change-down-3 {
         border: 2px solid #ff0000 !important;
+        z-index: 1;
     }
     .change-up-6 {
         border: 3px solid #00ff00 !important;
+        z-index: 1;
     }
     .change-down-6 {
         border: 3px solid #ff0000 !important;
+        z-index: 1;
     }
     .change-up-9 {
         border: 4px solid #00ff00 !important;
+        z-index: 1;
     }
     .change-down-9 {
         border: 4px solid #ff0000 !important;
+        z-index: 1;
     }
     
-    /* Image container */
+    /* Image container with proper z-index */
     div[data-testid="stImage"] {
         display: flex;
         justify-content: center;
         margin-bottom: 0.5rem;
         position: relative;
-        z-index: 1;
+        z-index: 4;
+    }
+    
+    /* Fix for stacked elements */
+    div.element-container {
+        position: relative;
+        z-index: 3;
+    }
+    
+    /* Ensure plots are visible */
+    .plotly {
+        position: relative;
+        z-index: 3;
     }
     
     /* Responsive adjustments */
