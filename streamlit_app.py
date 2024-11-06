@@ -24,6 +24,7 @@ st.markdown("""
         padding: 15px;
         margin: 5px;
         text-align: center;
+        overflow:hidden;
     }
     .stMetric {
         margin-bottom: 0.5rem;
