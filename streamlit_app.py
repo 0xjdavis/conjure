@@ -128,7 +128,7 @@ def create_sparkline(sparkline_data):
         fig.add_trace(go.Scatter(
             y=prices,
             mode='lines',
-            line=dict(color='#3366cc', width=1),
+            line=dict(color='gray', width=1),
             showlegend=False
         ))
         
@@ -184,7 +184,6 @@ def display_dashboard(df):
             width: 100%;
             height: 35px;
             margin: 0 auto;
-            color: #3d3d3d;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -207,7 +206,7 @@ def display_dashboard(df):
             with col:
                 # Using st.markdown to render HTML for the card structure with embedded sparkline
                 html_content = f'''
-                    <div class="card" style="border: {border_width} solid {border_color};">
+                    <div class="card" style="box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; border: {border_width} solid {border_color};">
                         <img src="{coin[1]["image"]}" height="50" width="50" />
                         <strong class="price">{coin[1]["name"]}</strong>
                         <div>
