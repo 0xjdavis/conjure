@@ -18,91 +18,96 @@ st.set_page_config(layout="wide")
 # Custom styling with centered content
 st.markdown("""
 <style>
-    .crypto-card {
-        background-color: #f0f2f6;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 5px;
-        text-align: center;
-        overflow:hidden;
-    }
-    .stMetric {
-        margin-bottom: 0.5rem;
+    div[data-testid="stVerticalBlock"] {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-    }
-    /* Center metric label */
-    .stMetric > div:first-child {
-        display: flex;
-        justify-content: center;
         width: 100%;
-    }
-    /* Center metric value */
-    .stMetric > div:nth-child(2) {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    .chart-container {
-        margin-top: -15px;
-        display: flex;
-        justify-content: center;
-    }
-    .stPlotlyChart {
-        width: 100% !important;
-        margin: 0 auto;
-    }
-    /* Center images */
-    .element-container img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    /* Center column contents */
-    [data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    /* Error and info messages */
-    .error-message {
-        color: #ff4b4b;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #ffe5e5;
-        margin: 10px 0;
-        text-align: center;
-    }
-    .info-message {
-        color: #31708f;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #d9edf7;
-        margin: 10px 0;
-        text-align: center;
-    }
-    /* Center metric delta */
-    .stMetric > div:last-child {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    /* Container styling */
-    .main-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 20px;
+        box-sizing: border-box;
     }
-    /* Header styling */
-    .dashboard-header {
-        text-align: center;
-        margin-bottom: 2rem;
+    div[data-testid="stColumn"] {
+        background-color: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 10px;
+        color: #000000;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 150px;
+        gap: 0.5rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
     }
-    /* Caption styling */
-    .stCaption {
-        text-align: center;
+    
+    /* Price change border classes */
+    .change-up-3 {
+        border: 4px solid #00ff00 !important;
+    }
+    .change-down-3 {
+        border: 4px solid #ff0000 !important;
+    }
+    .change-up-6 {
+        border: 7px solid #00ff00 !important;
+    }
+    .change-down-6 {
+        border: 7px solid #ff0000 !important;
+    }
+    .change-up-9 {
+        border: 10px solid #00ff00 !important;
+    }
+    .change-down-9 {
+        border: 10px solid #ff0000 !important;
+    }
+    
+    /* Center the image container */
+    div[data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Center metric label and value */
+    div[data-testid="stMetric"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Make Plotly charts expand full width */
+    div[data-testid="stColumn"] .stPlotlyChart {
+        width: 100%;
+    }
+    
+    /* Ensure the Plotly chart container takes full width */
+    div[data-testid="stColumn"] .stPlotlyChart > div {
+        width: 100%;
+    }
+    
+    /* Adjust the SVG within Plotly charts to full width */
+    div[data-testid="stColumn"] .stPlotlyChart svg {
+        width: 100%;
+    }
+    
+    /* Remove any fixed width from the chart wrapper */
+    .js-plotly-plot, .plot-container {
+        width: 100%; 
+    }    
+    .svg-container{
+        min-width: 100%;
+    }
+    .crypto-card {
+        overflow: hidden;
+        box-shadow: 0px 0px 10px gray;
     }
 </style>
 """, unsafe_allow_html=True)
