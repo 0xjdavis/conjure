@@ -172,6 +172,7 @@ def display_dashboard(df):
         .price {
             color: #000000;
             margin: 0 auto;
+            text-align:center;
         }
         .sparkline {
             width: 100%;
@@ -202,7 +203,7 @@ def display_dashboard(df):
                 html_content = f'''
                     <div class="card" style="border: {border_width} solid {border_color};">
                         <img src="{coin[1]["image"]}" height="50" width="50" />
-                        <h4>{coin[1]["name"]}</h4>
+                        <strong class="price">{coin[1]["name"]}</strong>
                         <div>
                             <strong class="price">${coin[1]['current_price']:,.2f}</strong>
                             <br />
