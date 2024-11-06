@@ -15,150 +15,101 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
+
 # Custom styling with centered content
 st.markdown("""
 <style>
-    #crypto-dashboard {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    div[data-testid="stCaptionContainer"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .main-container{
-        width: 800px;
-    }
-    div[data-testid="stVerticalBlock"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
+    .main-container {
+        max-width: 1200px;
         margin: 0 auto;
         padding: 0 20px;
-        box-sizing: border-box;
     }
-    div[data-testid="stVerticalBlock"] div {
-        max-width: 200px;
+    
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 2rem;
     }
-    div[data-testid="stColumn"] {
+    
+    .crypto-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .crypto-card {
         background-color: #ffffff;
         border: 1px solid #e1e4e8;
         border-radius: 10px;
-        color: #000000;
-        padding: 1.5rem 1rem;
+        padding: 1rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        min-width: 150px;
-        gap: 0.5rem;
-        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
         transition: all 0.3s ease;
-    }
-    div[data-testid="stMetricValue"] {
-        color: #000000;
-    }
-
-
-    /* Price change border classes */
-    .change-up-3 {
-        border: 4px solid #00ff00 !important;
-    }
-    .change-down-3 {
-        border: 4px solid #ff0000 !important;
-    }
-    .change-up-6 {
-        border: 7px solid #00ff00 !important;
-    }
-    .change-down-6 {
-        border: 7px solid #ff0000 !important;
-    }
-    .change-up-9 {
-        border: 10px solid #00ff00 !important;
-    }
-    .change-down-9 {
-        border: 10px solid #ff0000 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    /* Center the image container */
+    /* Ensure columns maintain proper width */
+    div[data-testid="column"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Fix for metric alignment */
+    div[data-testid="stMetric"] {
+        width: 100%;
+        text-align: center;
+    }
+    
+    div[data-testid="stMetricValue"] {
+        justify-content: center;
+    }
+    
+    /* Chart container fixes */
+    .chart-container {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .js-plotly-plot, .plot-container {
+        width: 100% !important;
+    }
+    
+    /* Price change border classes */
+    .change-up-3 {
+        border: 2px solid #00ff00;
+    }
+    .change-down-3 {
+        border: 2px solid #ff0000;
+    }
+    .change-up-6 {
+        border: 3px solid #00ff00;
+    }
+    .change-down-6 {
+        border: 3px solid #ff0000;
+    }
+    .change-up-9 {
+        border: 4px solid #00ff00;
+    }
+    .change-down-9 {
+        border: 4px solid #ff0000;
+    }
+    
+    /* Image container */
     div[data-testid="stImage"] {
         display: flex;
         justify-content: center;
-        align-items: center;
         margin-bottom: 0.5rem;
     }
     
-    /* Center metric label and value */
-    div[data-testid="stMetric"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Crypto card styling */
-    .crypto-card {
-        overflow: hidden;
-        box-shadow: 0px 0px 10px gray;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* Chart container styling */
-    .chart-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box;
-    }
-    
-    /* Plotly chart specific styling */
-    .js-plotly-plot {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .plotly {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .plot-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .svg-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .main-svg {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Ensure Plotly charts stay within bounds */
-    div[data-testid="stColumn"] .stPlotlyChart {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    div[data-testid="stColumn"] .stPlotlyChart > div {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    div[data-testid="stColumn"] .stPlotlyChart svg {
-        width: 100% !important;
-        max-width: 100% !important;
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .crypto-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -301,49 +252,47 @@ def display_dashboard(df):
         return
 
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    st.markdown('<div class="crypto-grid">', unsafe_allow_html=True)
     
-    # Display crypto metrics in a grid
-    cols_per_row = 4
-    for i in range(0, len(df), cols_per_row):
-        cols = st.columns(cols_per_row)
-        for j, col in enumerate(cols):
-            if i + j < len(df):
-                coin = df.iloc[i + j]
-                with col:
-                    with st.container():
-                        st.markdown('<div class="crypto-card">', unsafe_allow_html=True)
-                        
-                        if pd.notna(coin["image"]):
-                            st.image(coin["image"], width=30)
-                        
-                        price = f"${coin['current_price']:,.2f}"
-                        change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
-                        delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
-                        
-                        st.metric(
-                            label=coin["name"],
-                            value=price,
-                            delta=change,
-                            delta_color=delta_color
-                        )
-                        
-                        sparkline_data = coin.get('sparkline_in_7d')
-                        if sparkline_data is not None:
-                            fig = create_sparkline(sparkline_data)
-                            if fig:
-                                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                                st.plotly_chart(
-                                    fig,
-                                    use_container_width=True,
-                                    config={
-                                        'displayModeBar': False,
-                                        'staticPlot': True,
-                                        'responsive': True
-                                    }
-                                )
-                                st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        st.markdown('</div>', unsafe_allow_html=True)
+    for _, coin in df.iterrows():
+        with st.container():
+            st.markdown(
+                f'<div class="crypto-card {get_price_change_class(coin.get("price_change_percentage_24h"))}">', 
+                unsafe_allow_html=True
+            )
+            
+            if pd.notna(coin["image"]):
+                st.image(coin["image"], width=30)
+            
+            price = f"${coin['current_price']:,.2f}"
+            change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
+            delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
+            
+            st.metric(
+                label=coin["name"],
+                value=price,
+                delta=change,
+                delta_color=delta_color
+            )
+            
+            sparkline_data = coin.get('sparkline_in_7d')
+            if sparkline_data is not None:
+                fig = create_sparkline(sparkline_data)
+                if fig:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    st.plotly_chart(
+                        fig,
+                        use_container_width=True,
+                        config={
+                            'displayModeBar': False,
+                            'staticPlot': True
+                        }
+                    )
+                    st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Market Cap Comparison
     st.subheader("Market Cap Comparison")
