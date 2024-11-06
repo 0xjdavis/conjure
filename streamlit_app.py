@@ -160,7 +160,8 @@ def display_dashboard(df):
         #crypto-dashboard {
             text-align: center;
         }
-        div[data-testid="stCaptionContainer"] {
+        div[data-testid="stCaptionContainer"],
+        div[data-testid="stMarkdownContainer"] {
             text-align: center;
         }
         .card {
