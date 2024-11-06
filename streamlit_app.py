@@ -157,11 +157,16 @@ def display_dashboard(df):
     # Base CSS styling for the card layout
     st.markdown("""
     <style>
+
+
         .card {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            border: 10px;
+            margin: 10px;
             background-color: white;
             border-radius: 12px;
-            padding: 10px;
-            margin: 5px 0;
             text-align: center;
             max-width: 200px;
             box-shadow: 0px 0px 10px gray;
