@@ -142,20 +142,36 @@ def get_border_class(change_pct):
     return ""
 
 def display_dashboard(df):
-    # Add CSS
+    # First, let's style the content properly within the Streamlit app
     st.markdown("""
     <style>
-        div[data-testid="column"] > div:first-child {
+        .crypto-container {
             background: white;
             border-radius: 10px;
             padding: 1rem;
-            height: 100%;
+            margin-bottom: 1rem;
+            border: 2px solid transparent;
         }
         
-        div[data-testid="column"] > div.stBorder {
-            border-color: #00ff00 !important;
-            border-width: 2px !important;
-            border-style: solid !important;
+        /* Override Streamlit's default padding */
+        div[data-testid="column"] {
+            padding: 0.5rem !important;
+        }
+
+        /* Ensure elements stack properly */
+        div[data-testid="stImage"] {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        div[data-testid="stMetric"] {
+            margin: 0.5rem 0;
+        }
+
+        /* Chart container */
+        .element-container {
+            margin: 0.5rem 0;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -163,25 +179,39 @@ def display_dashboard(df):
     cols = st.columns(4)
     for idx, coin in df.iterrows():
         with cols[idx % 4]:
-            # Create a container with border
-            container = st.container()
-            container.markdown('<div class="stBorder">', unsafe_allow_html=True)
+            # Determine border color based on price change
+            price_change = coin.get('price_change_percentage_24h', 0)
+            border_color = "#00ff00" if price_change >= 0 else "#ff0000"
+            border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
+            
+            # Create a container with dynamic border style
+            st.markdown(
+                f"""
+                <div class="crypto-container" 
+                     style="border: {border_width} solid {border_color};">
+                """, 
+                unsafe_allow_html=True
+            )
             
             # Content
             st.image(coin["image"], width=30)
             st.metric(
                 label=coin["name"],
                 value=f"${coin['current_price']:,.2f}",
-                delta=f"{coin['price_change_percentage_24h']:.2f}%",
-                delta_color="normal" if coin['price_change_percentage_24h'] >= 0 else "inverse"
+                delta=f"{price_change:.2f}%",
+                delta_color="normal" if price_change >= 0 else "inverse"
             )
             
             if coin.get('sparkline_in_7d'):
                 fig = create_sparkline(coin['sparkline_in_7d'])
                 if fig:
-                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    st.plotly_chart(
+                        fig,
+                        use_container_width=True,
+                        config={'displayModeBar': False}
+                    )
             
-            container.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
             
 def main():
     """Main function to run the Streamlit app"""
