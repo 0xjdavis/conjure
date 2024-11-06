@@ -15,6 +15,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
+
 # Custom styling with centered content
 st.markdown("""
 <style>
@@ -47,31 +48,46 @@ st.markdown("""
         box-sizing: border-box;
     }
     
-    /* Card container */
-    .card-container {
+    /* Card wrapper for proper containment */
+    .card-wrapper {
+        position: relative;
         width: 100%;
         height: 100%;
         box-sizing: border-box;
     }
     
+    /* Card container with proper stacking context */
     .crypto-card {
         background-color: #ffffff;
         border-radius: 10px;
         padding: 1rem;
         height: 100%;
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         box-sizing: border-box;
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    /* Content container */
+    .card-content {
+        position: relative;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 1;
     }
     
     /* Fix for metric alignment */
     div[data-testid="stMetric"] {
         width: 100%;
         text-align: center;
+        position: relative;
+        z-index: 1;
     }
     
     div[data-testid="stMetricValue"] {
@@ -82,6 +98,8 @@ st.markdown("""
     .chart-container {
         width: 100%;
         margin-top: 0.5rem;
+        position: relative;
+        z-index: 1;
     }
     
     .js-plotly-plot, .plot-container {
@@ -113,6 +131,8 @@ st.markdown("""
         display: flex;
         justify-content: center;
         margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
     }
     
     /* Responsive adjustments */
@@ -282,11 +302,12 @@ def display_dashboard(df):
             if i + j < len(df):
                 coin = df.iloc[i + j]
                 with col:
-                    st.markdown('<div class="card-container">', unsafe_allow_html=True)
+                    st.markdown('<div class="card-wrapper">', unsafe_allow_html=True)
                     st.markdown(
                         f'<div class="crypto-card {get_price_change_class(coin.get("price_change_percentage_24h"))}">', 
                         unsafe_allow_html=True
                     )
+                    st.markdown('<div class="card-content">', unsafe_allow_html=True)
                     
                     if pd.notna(coin["image"]):
                         st.image(coin["image"], width=30)
@@ -317,33 +338,12 @@ def display_dashboard(df):
                             )
                             st.markdown('</div>', unsafe_allow_html=True)
                     
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)  # Close card-content
+                    st.markdown('</div>', unsafe_allow_html=True)  # Close crypto-card
+                    st.markdown('</div>', unsafe_allow_html=True)  # Close card-wrapper
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # Market Cap Comparison
-    st.subheader("Market Cap Comparison")
-    fig = px.bar(
-        df.sort_values("market_cap", ascending=True).tail(20),
-        x="market_cap",
-        y="name",
-        orientation='h',
-        title="Top 20 Cryptocurrencies by Market Cap",
-        labels={"market_cap": "Market Cap (USD)", "name": "Cryptocurrency"}
-    )
-
-    fig.update_layout(
-        height=600,
-        xaxis_title="Market Cap (USD)",
-        yaxis_title="Cryptocurrency",
-        showlegend=False
-    )
-    fig.update_xaxes(tickformat="$.2s")
-    st.plotly_chart(fig, use_container_width=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
-
 def main():
     """Main function to run the Streamlit app"""
     # Initialize session state
