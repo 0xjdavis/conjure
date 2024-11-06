@@ -10,6 +10,7 @@ import time
 from cachetools import TTLCache
 import random
 import base64
+import kaleido
 
 # Initialize cache with 5-minute TTL
 cache = TTLCache(maxsize=100, ttl=300)
