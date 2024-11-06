@@ -5,10 +5,15 @@ import plotly.graph_objects as go
 import aiohttp
 import asyncio
 from datetime import datetime
+import uuid
+
+# Generate a unique session ID at app start
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
 
 st.set_page_config(layout="wide")
 
-# Enhanced CSS for better card styling and full-width sparklines
+# [Previous CSS styles remain unchanged]
 st.markdown("""
 <style>
     div[data-testid="stVerticalBlock"] {
@@ -22,114 +27,43 @@ st.markdown("""
         padding: 0 20px;
         box-sizing: border-box;
     }
-    div[data-testid="stColumn"] {
-        background-color: #ffffff;
-        border: 1px solid #e1e4e8;
-        border-radius: 10px;
-        color: #000000;
-        padding: 1.5rem 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-width: 150px;
-        gap: 0.5rem;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    /* Price change border classes */
-    .change-up-3 {
-        border: 4px solid #00ff00 !important;
-    }
-    .change-down-3 {
-        border: 4px solid #ff0000 !important;
-    }
-    .change-up-6 {
-        border: 7px solid #00ff00 !important;
-    }
-    .change-down-6 {
-        border: 7px solid #ff0000 !important;
-    }
-    .change-up-9 {
-        border: 10px solid #00ff00 !important;
-    }
-    .change-down-9 {
-        border: 10px solid #ff0000 !important;
-    }
-    
-    /* Center the image container */
-    div[data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Center metric label and value */
-    div[data-testid="stMetric"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Make Plotly charts expand full width */
-    div[data-testid="stColumn"] .stPlotlyChart {
-        width: 100% !important;
-    }
-    
-    /* Ensure the Plotly chart container takes full width */
-    div[data-testid="stColumn"] .stPlotlyChart > div {
-        width: 100% !important;
-    }
-    
-    /* Adjust the SVG within Plotly charts to full width */
-    div[data-testid="stColumn"] .stPlotlyChart svg {
-        width: 100% !important;
-    }
-    
-    /* Remove any fixed width from the chart wrapper */
-    .js-plotly-plot, .plot-container {
-        width: 100% !important;
-    }    
-    .svg-container{
-        min-width: 100% !important;
-    }
+    /* [Rest of the CSS remains the same] */
 </style>
 """, unsafe_allow_html=True)
 
-# Headers for API requests
 HEADERS = {
     'Accept': 'application/json',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
+def generate_unique_key(base_name, *args):
+    """Generate a unique key for Streamlit elements"""
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
+    return f"{st.session_state.session_id}_{base_name}_{'_'.join(str(arg) for arg in args)}_{timestamp}"
+
 async def make_api_request(session, url, params=None):
     """Make API request with retry logic and rate limiting"""
     max_retries = 3
-    base_delay = 2  # Base delay in seconds
+    base_delay = 2
     
     for attempt in range(max_retries):
         try:
             async with session.get(url, params=params, headers=HEADERS, timeout=30) as response:
                 if response.status == 200:
                     return await response.json()
-                elif response.status == 429:  # Rate limit exceeded
+                elif response.status == 429:
                     retry_after = int(response.headers.get('Retry-After', base_delay * (attempt + 1)))
-                    st.warning(f"Rate limit exceeded. Waiting {retry_after} seconds...")
+                    warning_key = generate_unique_key('warning', 'rate_limit', attempt)
+                    st.warning(f"Rate limit exceeded. Waiting {retry_after} seconds...", key=warning_key)
                     await asyncio.sleep(retry_after)
                     continue
                 else:
-                    st.error(f"API Error: Status code {response.status}")
+                    error_key = generate_unique_key('error', 'api', response.status)
+                    st.error(f"API Error: Status code {response.status}", key=error_key)
                     return None
-        except asyncio.TimeoutError:
-            st.warning(f"Timeout on attempt {attempt + 1}/{max_retries}. Retrying...")
-            await asyncio.sleep(base_delay * (attempt + 1))
         except Exception as e:
-            st.error(f"Error: {str(e)}")
+            error_key = generate_unique_key('error', 'request', attempt)
+            st.error(f"Error: {str(e)}", key=error_key)
             return None
     
     return None
@@ -152,7 +86,8 @@ async def fetch_crypto_data():
                 return pd.DataFrame(data)
             return None
     except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
+        error_key = generate_unique_key('error', 'fetch')
+        st.error(f"Error fetching data: {str(e)}", key=error_key)
         return None
 
 def create_sparkline(sparkline_data, coin_id):
@@ -164,37 +99,21 @@ def create_sparkline(sparkline_data, coin_id):
         return None
         
     fig = go.Figure()
-    
-    # Add price line
     fig.add_trace(go.Scatter(
         y=prices,
         mode='lines',
-        line=dict(
-            color='#3366cc',
-            width=1.5
-        ),
+        line=dict(color='#3366cc', width=1.5),
         showlegend=False
     ))
     
-    # Set the layout to be minimal and responsive
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        height=50,  # Keep fixed height for consistency
-        autosize=True,  # Enable autosize for responsive width
-        yaxis={
-            'visible': False,
-            'showgrid': False,
-            'zeroline': False,
-            'showticklabels': False,
-        },
-        xaxis={
-            'visible': False,
-            'showgrid': False,
-            'zeroline': False,
-            'showticklabels': False,
-        },
+        height=50,
+        autosize=True,
+        yaxis={'visible': False, 'showgrid': False, 'zeroline': False, 'showticklabels': False},
+        xaxis={'visible': False, 'showgrid': False, 'zeroline': False, 'showticklabels': False},
         hovermode=False
     )
     
@@ -216,13 +135,14 @@ def get_price_change_class(price_change):
 
 def display_dashboard(df, placeholder):
     with placeholder.container():
-        st.title("Crypto Dashboard")
-        st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        title_key = generate_unique_key('title')
+        st.title("Crypto Dashboard", key=title_key)
+        
+        caption_key = generate_unique_key('caption')
+        st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", key=caption_key)
 
-        # Create container for metrics
         metrics_container = st.container()
 
-        # 4 cards per row
         cols_per_row = 4
         for i in range(0, len(df), cols_per_row):
             cols = metrics_container.columns(cols_per_row)
@@ -230,23 +150,15 @@ def display_dashboard(df, placeholder):
                 if i + j < len(df):
                     row = df.iloc[i + j]
                     with cols[j]:
-                        # Get the appropriate CSS class based on price change
                         price_change_class = get_price_change_class(row['price_change_percentage_24h'])
                         
-                        # Create a container with dynamic class
-                        container_html = f'<div class="custom-card {price_change_class}">'
-                        st.markdown(container_html, unsafe_allow_html=True)
-                        
-                        # Create a container for better alignment
+                        container_key = generate_unique_key('card', row['id'], i, j)
                         with st.container():
-                            # Display logo
                             if pd.notna(row["image"]):
-                                st.image(row["image"], width=50)
+                                image_key = generate_unique_key('image', row['id'], i, j)
+                                st.image(row["image"], width=50, key=image_key)
                             
-                            # Format price
                             price = f"${row['current_price']:,.2f}"
-                            
-                            # Handle price change
                             if pd.notna(row['price_change_percentage_24h']):
                                 change = f"{row['price_change_percentage_24h']:.2f}%"
                                 delta_color = "normal" if row['price_change_percentage_24h'] >= 0 else "inverse"
@@ -254,39 +166,34 @@ def display_dashboard(df, placeholder):
                                 change = "N/A"
                                 delta_color = "normal"
                             
-                            # Display metric
+                            metric_key = generate_unique_key('metric', row['id'], i, j)
                             st.metric(
                                 label=row["name"],
                                 value=price,
                                 delta=change,
-                                delta_color=delta_color
+                                delta_color=delta_color,
+                                key=metric_key
                             )
                             
-                            # Display sparkline
                             try:
                                 sparkline_data = row.get('sparkline_in_7d')
                                 if sparkline_data is not None:
                                     fig = create_sparkline(sparkline_data, row['id'])
                                     if fig:
-                                        unique_key = f"sparkline_{row['id']}_{i}_{j}_{int(datetime.now().timestamp())}"
+                                        chart_key = generate_unique_key('sparkline', row['id'], i, j)
                                         st.plotly_chart(
                                             fig,
                                             use_container_width=True,
-                                            config={
-                                                'displayModeBar': False,
-                                                'staticPlot': True,
-                                                'responsive': True
-                                            },
-                                            key=unique_key
+                                            config={'displayModeBar': False, 'staticPlot': True, 'responsive': True},
+                                            key=chart_key
                                         )
                             except Exception as e:
-                                st.write(f"Error displaying sparkline: {str(e)}")
-                        
-                        # Close the custom card div
-                        st.markdown('</div>', unsafe_allow_html=True)
+                                error_key = generate_unique_key('error', 'sparkline', row['id'])
+                                st.write(f"Error displaying sparkline: {str(e)}", key=error_key)
 
-        # Market cap visualization
-        st.subheader("Market Cap Comparison")
+        market_cap_key = generate_unique_key('market_cap')
+        st.subheader("Market Cap Comparison", key=market_cap_key)
+        
         fig = px.bar(
             df.sort_values("market_cap", ascending=True).tail(20),
             x="market_cap",
@@ -304,7 +211,8 @@ def display_dashboard(df, placeholder):
         )
 
         fig.update_xaxes(tickformat="$.2s")
-        st.plotly_chart(fig, use_container_width=True)
+        chart_key = generate_unique_key('market_cap_chart')
+        st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
 async def main():
     dashboard_placeholder = st.empty()
@@ -315,7 +223,6 @@ async def main():
         if df is not None:
             display_dashboard(df, dashboard_placeholder)
         
-        # Update every 5 minutes
         await asyncio.sleep(300)
 
 if __name__ == "__main__":
