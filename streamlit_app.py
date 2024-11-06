@@ -125,65 +125,57 @@ def create_sparkline(sparkline_data):
     )
     
     return fig
-
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Add CSS that targets the specific Streamlit container structure
+    # Base CSS styling for the card layout
     st.markdown("""
     <style>
-        [data-testid="stVerticalBlock"] {
-            background: white;
+        .card {
+            background-color: white;
             border-radius: 10px;
             padding: 1rem;
             margin: 0.5rem;
+            text-align: center;
         }
-        
-        /* Target the metric value container */
-        [data-testid="stMetricValue"] {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-        
-        /* Target the image container */
-        [data-testid="stImage"] {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 0.5rem;
+        .card img {
+            display: block;
+            margin: 0 auto 0.5rem;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    cols = st.columns(4)
-    for idx, coin in df.iterrows():
-        with cols[idx % 4]:
-            # Apply dynamic border style to the vertical block
-            price_change = coin.get('price_change_percentage_24h', 0)
+    # Create grid layout in rows of 4
+    for i in range(0, len(df), 4):
+        row_data = df[i:i+4]
+        cols = st.columns(len(row_data))
+
+        for idx, (col, coin) in enumerate(zip(cols, row_data.iterrows())):
+            price_change = coin[1].get('price_change_percentage_24h', 0)
             border_color = "#00ff00" if price_change >= 0 else "#ff0000"
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
-            st.markdown(f"""
-                <style>
-                    [data-testid="column"]:nth-child({(idx % 4) + 1}) [data-testid="stVerticalBlock"] {{
-                        border: {border_width} solid {border_color};
-                    }}
-                </style>
+            # Add dynamic inline style with border properties
+            col.markdown(f"""
+                <div class="card" style="border: {border_width} solid {border_color};">
+                    <img src="{coin[1]["image"]}" width="30" />
+                    <h4>{coin[1]["name"]}</h4>
+                    <div>
+                        <strong>${coin[1]['current_price']:,.2f}</strong>
+                        <br />
+                        <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
+                            {price_change:.2f}%
+                        </span>
+                    </div>
+                </div>
             """, unsafe_allow_html=True)
-            
-            st.image(coin["image"], width=30)
-            st.metric(
-                label=coin["name"],
-                value=f"${coin['current_price']:,.2f}",
-                delta=f"{price_change:.2f}%",
-                delta_color="normal" if price_change >= 0 else "inverse"
-            )
-            
-            if coin.get('sparkline_in_7d'):
-                fig = create_sparkline(coin['sparkline_in_7d'])
+
+            # Optional sparkline chart
+            if coin[1].get('sparkline_in_7d'):
+                fig = create_sparkline(coin[1]['sparkline_in_7d'])
                 if fig:
-                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    col.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                     
 
 def get_border_class(change_pct):
