@@ -38,6 +38,7 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        width: 200px;
         margin: 0 auto;
         padding: 0 20px;
         box-sizing: border-box;
