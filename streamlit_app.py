@@ -172,7 +172,7 @@ def display_dashboard(df):
             background-color: white;
             border-radius: 12px;
             text-align: center;
-            max-width: 200px;
+            max-width: 250px;
             box-shadow: 0px 0px 10px #D3D3D3;
         }
         .card img {
