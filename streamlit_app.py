@@ -192,7 +192,7 @@ def main():
     # Auto-refresh every 5 minutes
     st.session_state.update_counter += 1
     time.sleep(0.1)  # Small delay to prevent excessive CPU usage
-    st.experimental_rerun()
+    st.rerun()
 
 if __name__ == "__main__":
     import time
