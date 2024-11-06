@@ -56,7 +56,11 @@ st.markdown("""
         overflow: hidden;
         transition: all 0.3s ease;
     }
-    
+    div[data-testid="stMetricValue"] {
+        color: #000000;
+    }
+
+
     /* Price change border classes */
     .change-up-3 {
         border: 4px solid #00ff00 !important;
