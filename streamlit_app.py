@@ -161,7 +161,7 @@ def display_dashboard(df):
             text-align: center;
         }
         div[data-testid="stCaptionContainer"],
-        div[data-testid="stMarkdownContainer"] {
+        .stColumn{
             text-align: center;
         }
         .card {
