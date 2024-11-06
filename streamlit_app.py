@@ -177,7 +177,7 @@ def display_dashboard(df):
             width: 100%;
             height: 35px;
             margin: 0 auto;
-            color: #000000;
+            color: #3d3d3d;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -189,7 +189,7 @@ def display_dashboard(df):
 
         for idx, (col, coin) in enumerate(zip(cols, row_data.iterrows())):
             price_change = coin[1].get('price_change_percentage_24h', 0)
-            border_color = "#00ff00" if price_change >= 0 else "#ff0000"
+            border_color = "#C2ED99" if price_change >= 0 else "#E88687"
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
             # Generate sparkline SVG
@@ -206,7 +206,7 @@ def display_dashboard(df):
                         <div>
                             <strong class="price">${coin[1]['current_price']:,.2f}</strong>
                             <br />
-                            <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
+                            <span style="color: {'#C2ED99' if price_change >= 0 else '#E88687'};">
                                 {price_change:.2f}%
                             </span>
                         </div>
@@ -214,7 +214,7 @@ def display_dashboard(df):
                 
                 # Add sparkline if available
                 if sparkline_svg:
-                    html_content += f'<img src="{sparkline_svg}" class="sparkline" /><br /> Weekly Price Change'
+                    html_content += f'<img src="{sparkline_svg}" class="sparkline" />'
                 
                 html_content += '</div>'
                 col.markdown(html_content, unsafe_allow_html=True)
