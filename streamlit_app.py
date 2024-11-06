@@ -15,7 +15,6 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
-
 # Custom styling with centered content
 st.markdown("""
 <style>
@@ -23,6 +22,7 @@ st.markdown("""
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 20px;
+        box-sizing: border-box;
     }
     
     .dashboard-header {
@@ -32,30 +32,40 @@ st.markdown("""
     
     .crypto-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
         padding: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Column container fixes */
+    div[data-testid="column"] {
+        width: auto !important;
+        min-width: 0 !important;
+        padding: 0.5rem !important;
+        box-sizing: border-box;
+    }
+    
+    /* Card container */
+    .card-container {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
     }
     
     .crypto-card {
         background-color: #ffffff;
-        border: 1px solid #e1e4e8;
         border-radius: 10px;
         padding: 1rem;
+        height: 100%;
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 100%;
         box-sizing: border-box;
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    /* Ensure columns maintain proper width */
-    div[data-testid="column"] {
-        width: 100% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
     }
     
     /* Fix for metric alignment */
@@ -80,22 +90,22 @@ st.markdown("""
     
     /* Price change border classes */
     .change-up-3 {
-        border: 2px solid #00ff00;
+        border: 2px solid #00ff00 !important;
     }
     .change-down-3 {
-        border: 2px solid #ff0000;
+        border: 2px solid #ff0000 !important;
     }
     .change-up-6 {
-        border: 3px solid #00ff00;
+        border: 3px solid #00ff00 !important;
     }
     .change-down-6 {
-        border: 3px solid #ff0000;
+        border: 3px solid #ff0000 !important;
     }
     .change-up-9 {
-        border: 4px solid #00ff00;
+        border: 4px solid #00ff00 !important;
     }
     .change-down-9 {
-        border: 4px solid #ff0000;
+        border: 4px solid #ff0000 !important;
     }
     
     /* Image container */
@@ -106,9 +116,21 @@ st.markdown("""
     }
     
     /* Responsive adjustments */
-    @media (max-width: 768px) {
+    @media (max-width: 1200px) {
         .crypto-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .crypto-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .crypto-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -239,7 +261,6 @@ def get_price_change_class(price_change):
         return "change-up-3" if price_change >= 0 else "change-down-3"
     return ""
 
-
 def display_dashboard(df):
     """Display the cryptocurrency dashboard"""
     st.markdown('<div class="dashboard-header">', unsafe_allow_html=True)
@@ -254,44 +275,51 @@ def display_dashboard(df):
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown('<div class="crypto-grid">', unsafe_allow_html=True)
     
-    for _, coin in df.iterrows():
-        with st.container():
-            st.markdown(
-                f'<div class="crypto-card {get_price_change_class(coin.get("price_change_percentage_24h"))}">', 
-                unsafe_allow_html=True
-            )
-            
-            if pd.notna(coin["image"]):
-                st.image(coin["image"], width=30)
-            
-            price = f"${coin['current_price']:,.2f}"
-            change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
-            delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
-            
-            st.metric(
-                label=coin["name"],
-                value=price,
-                delta=change,
-                delta_color=delta_color
-            )
-            
-            sparkline_data = coin.get('sparkline_in_7d')
-            if sparkline_data is not None:
-                fig = create_sparkline(sparkline_data)
-                if fig:
-                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(
-                        fig,
-                        use_container_width=True,
-                        config={
-                            'displayModeBar': False,
-                            'staticPlot': True
-                        }
+    cols_per_row = 4
+    for i in range(0, len(df), cols_per_row):
+        cols = st.columns(cols_per_row)
+        for j, col in enumerate(cols):
+            if i + j < len(df):
+                coin = df.iloc[i + j]
+                with col:
+                    st.markdown('<div class="card-container">', unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div class="crypto-card {get_price_change_class(coin.get("price_change_percentage_24h"))}">', 
+                        unsafe_allow_html=True
                     )
+                    
+                    if pd.notna(coin["image"]):
+                        st.image(coin["image"], width=30)
+                    
+                    price = f"${coin['current_price']:,.2f}"
+                    change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
+                    delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
+                    
+                    st.metric(
+                        label=coin["name"],
+                        value=price,
+                        delta=change,
+                        delta_color=delta_color
+                    )
+                    
+                    sparkline_data = coin.get('sparkline_in_7d')
+                    if sparkline_data is not None:
+                        fig = create_sparkline(sparkline_data)
+                        if fig:
+                            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                            st.plotly_chart(
+                                fig,
+                                use_container_width=True,
+                                config={
+                                    'displayModeBar': False,
+                                    'staticPlot': True
+                                }
+                            )
+                            st.markdown('</div>', unsafe_allow_html=True)
+                    
                     st.markdown('</div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-    
+                    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Market Cap Comparison
