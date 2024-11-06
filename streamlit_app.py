@@ -105,13 +105,8 @@ async def fetch_crypto_data():
 def fig_to_svg(fig):
     """Convert Plotly figure to SVG string"""
     try:
-        # Configure the renderer
-        pio.kaleido.scope.default_format = "svg"
-        pio.kaleido.scope.default_width = 150
-        pio.kaleido.scope.default_height = 35
-        
-        # Convert to SVG
-        svg_bytes = pio.to_image(fig, format='svg')
+        # Use direct image conversion without modifying scope
+        svg_bytes = fig.to_image(format='svg', width=150, height=35)
         svg_str = base64.b64encode(svg_bytes).decode()
         return f'data:image/svg+xml;base64,{svg_str}'
     except Exception as e:
