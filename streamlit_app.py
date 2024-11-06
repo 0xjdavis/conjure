@@ -16,7 +16,7 @@ import kaleido
 cache = TTLCache(maxsize=100, ttl=300)
 
 # Page configuration
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 class RateLimiter:
     def __init__(self, max_requests=10, time_window=60):
@@ -128,7 +128,7 @@ def create_sparkline(sparkline_data):
         fig.add_trace(go.Scatter(
             y=prices,
             mode='lines',
-            line=dict(color='gray', width=1),
+            line=dict(color='#F5F5F5', width=1),
             showlegend=False
         ))
         
@@ -157,8 +157,12 @@ def display_dashboard(df):
     # Base CSS styling for the card layout
     st.markdown("""
     <style>
-
-
+        #crypto-dashboard {
+            text-align: center;
+        }
+        div[data-testid="stCaptionContainer"] {
+            text-align: center;
+        }
         .card {
             box-sizing: border-box;
             -moz-box-sizing: border-box;
@@ -173,7 +177,7 @@ def display_dashboard(df):
         }
         .card img {
             display: block;
-            margin: 0 auto;
+            margin: 10px auto 0;
         }
         .price {
             color: #000000;
@@ -207,7 +211,7 @@ def display_dashboard(df):
                 # Using st.markdown to render HTML for the card structure with embedded sparkline
                 html_content = f'''
                     <div class="card" style="box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; border: {border_width} solid {border_color};">
-                        <img src="{coin[1]["image"]}" height="50" width="50" />
+                        <img src="{coin[1]["image"]}" height="40" width="40" />
                         <strong class="price">{coin[1]["name"]}</strong>
                         <div>
                             <strong class="price">${coin[1]['current_price']:,.2f}</strong>
