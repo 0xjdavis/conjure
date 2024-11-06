@@ -83,40 +83,61 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     
-    /* Make Plotly charts expand full width */
-    div[data-testid="stColumn"] .stPlotlyChart {
-        width: 100% !important;
-    }
-    
-    /* Ensure the Plotly chart container takes full width */
-    div[data-testid="stColumn"] .stPlotlyChart > div {
-        width: 100% !important;
-    }
-    
-    /* Adjust the SVG within Plotly charts to full width */
-    div[data-testid="stColumn"] .stPlotlyChart svg {
-        width: 100% !important;
-    }
-    
-    /* Remove any fixed width from the chart wrapper */
-    .js-plotly-plot, .plot-container {
-        width: 100% !important;
-    }    
-    .svg-container {
-        width: 100% !important;
-    }
+    /* Crypto card styling */
     .crypto-card {
         overflow: hidden;
         box-shadow: 0px 0px 10px gray;
         width: 100%;
+        box-sizing: border-box;
     }
+    
+    /* Chart container styling */
     .chart-container {
         width: 100% !important;
         max-width: 100% !important;
+        box-sizing: border-box;
     }
-    /* Force the main-svg to respect container width */
+    
+    /* Plotly chart specific styling */
+    .js-plotly-plot {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .plotly {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .plot-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .svg-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
     .main-svg {
         width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure Plotly charts stay within bounds */
+    div[data-testid="stColumn"] .stPlotlyChart {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    div[data-testid="stColumn"] .stPlotlyChart > div {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    div[data-testid="stColumn"] .stPlotlyChart svg {
+        width: 100% !important;
+        max-width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -224,7 +245,6 @@ def create_sparkline(sparkline_data):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         height=35,
-        width=None,  # Remove fixed width
         autosize=True,
         yaxis={'visible': False, 'showgrid': False, 'zeroline': False},
         xaxis={'visible': False, 'showgrid': False, 'zeroline': False},
