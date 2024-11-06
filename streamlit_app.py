@@ -18,7 +18,8 @@ st.set_page_config(layout="wide")
 # Custom styling with centered content
 st.markdown("""
 <style>
-    #crypto-dashboard {
+    #crypto-dashboard,
+    data-testid="stCaptionContainer" {
         display: flex;
         flex-direction: column;
         align-items: center;
