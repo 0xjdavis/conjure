@@ -160,21 +160,24 @@ def display_dashboard(df):
         .card {
             background-color: white;
             border-radius: 10px;
-            padding: 1rem;
-            margin: 0.5rem;
+            padding: 0;
+            margin: 0;
             text-align: center;
+            max-width: 200px;
         }
         .card img {
             display: block;
-            margin: 0 auto 0.5rem;
+            margin: 0 auto;
         }
         .price {
             color: #000000;
+            margin: 0 auto;
         }
         .sparkline {
             width: 100%;
             height: 35px;
-            margin-top: 0.5rem;
+            margin: 0 auto;
+            color: #000000;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -198,7 +201,7 @@ def display_dashboard(df):
                 # Using st.markdown to render HTML for the card structure with embedded sparkline
                 html_content = f'''
                     <div class="card" style="border: {border_width} solid {border_color};">
-                        <img src="{coin[1]["image"]}" width="30" />
+                        <img src="{coin[1]["image"]}" height="50" width="50" />
                         <h4>{coin[1]["name"]}</h4>
                         <div>
                             <strong class="price">${coin[1]['current_price']:,.2f}</strong>
@@ -211,7 +214,7 @@ def display_dashboard(df):
                 
                 # Add sparkline if available
                 if sparkline_svg:
-                    html_content += f'<img src="{sparkline_svg}" class="sparkline" />'
+                    html_content += f'<img src="{sparkline_svg}" class="sparkline" /><br /> Weekly Price Change'
                 
                 html_content += '</div>'
                 col.markdown(html_content, unsafe_allow_html=True)
