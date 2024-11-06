@@ -41,122 +41,91 @@ st.markdown("""
     
     /* Column container fixes */
     div[data-testid="column"] {
-        width: auto !important;
-        min-width: 0 !important;
+        width: 100% !important;
         padding: 0.5rem !important;
         box-sizing: border-box;
     }
     
-    /* Card wrapper with proper stacking context */
+    /* Card wrapper */
     .card-wrapper {
-        position: relative;
         width: 100%;
-        height: 100%;
-        box-sizing: border-box;
-        z-index: 1;
+        margin: 0;
+        padding: 0;
     }
     
-    /* Card container with proper layering */
+    /* Card container */
     .crypto-card {
         background-color: #ffffff;
         border-radius: 10px;
         padding: 1rem;
-        height: 100%;
         width: 100%;
         box-sizing: border-box;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 2;
+        overflow: hidden;
+        position: relative;
     }
     
-    /* Content container with proper stacking */
+    /* Price change border classes */
+    .change-up-3 {
+        outline: 2px solid #00ff00;
+        outline-offset: -2px;
+    }
+    .change-down-3 {
+        outline: 2px solid #ff0000;
+        outline-offset: -2px;
+    }
+    .change-up-6 {
+        outline: 3px solid #00ff00;
+        outline-offset: -3px;
+    }
+    .change-down-6 {
+        outline: 3px solid #ff0000;
+        outline-offset: -3px;
+    }
+    .change-up-9 {
+        outline: 4px solid #00ff00;
+        outline-offset: -4px;
+    }
+    .change-down-9 {
+        outline: 4px solid #ff0000;
+        outline-offset: -4px;
+    }
+    
+    /* Content styling */
     .card-content {
         width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 3;
-        position: relative;
     }
     
-    /* Ensure metric is above background */
-    div[data-testid="stMetric"] {
-        width: 100%;
-        text-align: center;
-        position: relative;
-        z-index: 4;
-        background: transparent;
-    }
-    
-    div[data-testid="stMetricValue"] {
-        justify-content: center;
-        position: relative;
-        z-index: 4;
-    }
-    
-    /* Chart container with proper z-index */
-    .chart-container {
-        width: 100%;
-        margin-top: 0.5rem;
-        position: relative;
-        z-index: 3;
-    }
-    
-    .js-plotly-plot, .plot-container {
-        width: 100% !important;
-        position: relative;
-        z-index: 3;
-    }
-    
-    /* Price change border classes with proper z-index */
-    .change-up-3 {
-        border: 2px solid #00ff00 !important;
-        z-index: 1;
-    }
-    .change-down-3 {
-        border: 2px solid #ff0000 !important;
-        z-index: 1;
-    }
-    .change-up-6 {
-        border: 3px solid #00ff00 !important;
-        z-index: 1;
-    }
-    .change-down-6 {
-        border: 3px solid #ff0000 !important;
-        z-index: 1;
-    }
-    .change-up-9 {
-        border: 4px solid #00ff00 !important;
-        z-index: 1;
-    }
-    .change-down-9 {
-        border: 4px solid #ff0000 !important;
-        z-index: 1;
-    }
-    
-    /* Image container with proper z-index */
+    /* Image container */
     div[data-testid="stImage"] {
         display: flex;
         justify-content: center;
         margin-bottom: 0.5rem;
-        position: relative;
-        z-index: 4;
     }
     
-    /* Fix for stacked elements */
-    div.element-container {
-        position: relative;
-        z-index: 3;
+    /* Metric styling */
+    div[data-testid="stMetric"] {
+        width: 100%;
+        text-align: center;
     }
     
-    /* Ensure plots are visible */
-    .plotly {
-        position: relative;
-        z-index: 3;
+    div[data-testid="stMetricValue"] {
+        justify-content: center;
+    }
+    
+    /* Chart container */
+    .chart-container {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .js-plotly-plot, .plot-container {
+        width: 100% !important;
     }
     
     /* Responsive adjustments */
@@ -179,6 +148,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 class RateLimiter:
     def __init__(self, max_requests=10, time_window=60):
@@ -326,47 +296,48 @@ def display_dashboard(df):
             if i + j < len(df):
                 coin = df.iloc[i + j]
                 with col:
-                    st.markdown('<div class="card-wrapper">', unsafe_allow_html=True)
-                    st.markdown(
-                        f'<div class="crypto-card {get_price_change_class(coin.get("price_change_percentage_24h"))}">', 
-                        unsafe_allow_html=True
-                    )
-                    st.markdown('<div class="card-content">', unsafe_allow_html=True)
-                    
-                    if pd.notna(coin["image"]):
-                        st.image(coin["image"], width=30)
-                    
-                    price = f"${coin['current_price']:,.2f}"
-                    change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
-                    delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
-                    
-                    st.metric(
-                        label=coin["name"],
-                        value=price,
-                        delta=change,
-                        delta_color=delta_color
-                    )
-                    
-                    sparkline_data = coin.get('sparkline_in_7d')
-                    if sparkline_data is not None:
-                        fig = create_sparkline(sparkline_data)
-                        if fig:
-                            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                            st.plotly_chart(
-                                fig,
-                                use_container_width=True,
-                                config={
-                                    'displayModeBar': False,
-                                    'staticPlot': True
-                                }
-                            )
-                            st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    st.markdown('</div>', unsafe_allow_html=True)  # Close card-content
-                    st.markdown('</div>', unsafe_allow_html=True)  # Close crypto-card
-                    st.markdown('</div>', unsafe_allow_html=True)  # Close card-wrapper
+                    # Create a container div for the entire card
+                    container = st.container()
+                    with container:
+                        st.markdown(
+                            f'''
+                            <div class="card-wrapper">
+                                <div class="crypto-card {get_price_change_class(coin.get('price_change_percentage_24h'))}">
+                                    <div class="card-content">
+                            ''',
+                            unsafe_allow_html=True
+                        )
+                        
+                        if pd.notna(coin["image"]):
+                            st.image(coin["image"], width=30)
+                        
+                        price = f"${coin['current_price']:,.2f}"
+                        change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
+                        delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
+                        
+                        st.metric(
+                            label=coin["name"],
+                            value=price,
+                            delta=change,
+                            delta_color=delta_color
+                        )
+                        
+                        sparkline_data = coin.get('sparkline_in_7d')
+                        if sparkline_data is not None:
+                            fig = create_sparkline(sparkline_data)
+                            if fig:
+                                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                                st.plotly_chart(
+                                    fig,
+                                    use_container_width=True,
+                                    config={'displayModeBar': False, 'staticPlot': True}
+                                )
+                                st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        # Close the divs
+                        st.markdown('</div></div></div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div></div>', unsafe_allow_html=True)
     
 def main():
     """Main function to run the Streamlit app"""
