@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 import aiohttp
 import asyncio
 from datetime import datetime, timedelta
 import time
 from cachetools import TTLCache
 import random
+import base64
 
 # Initialize cache with 5-minute TTL
 cache = TTLCache(maxsize=100, ttl=300)
@@ -96,8 +98,14 @@ async def fetch_crypto_data():
         st.error(f"Error fetching data: {str(e)}")
         return None
 
+def fig_to_svg(fig):
+    """Convert Plotly figure to SVG string"""
+    svg_str = pio.to_image(fig, format='svg')
+    svg_str = base64.b64encode(svg_str).decode()
+    return f'data:image/svg+xml;base64,{svg_str}'
+
 def create_sparkline(sparkline_data):
-    """Create a compact sparkline chart"""
+    """Create a compact sparkline chart and return as SVG"""
     if not sparkline_data or not isinstance(sparkline_data, dict) or 'price' not in sparkline_data:
         return None
     
@@ -118,13 +126,14 @@ def create_sparkline(sparkline_data):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         height=35,
-        autosize=True,
+        width=150,
+        autosize=False,
         yaxis={'visible': False, 'showgrid': False, 'zeroline': False},
         xaxis={'visible': False, 'showgrid': False, 'zeroline': False},
         hovermode=False
     )
     
-    return fig
+    return fig_to_svg(fig)
 
 def display_dashboard(df):
     st.title("Crypto Dashboard")
@@ -144,6 +153,11 @@ def display_dashboard(df):
             display: block;
             margin: 0 auto 0.5rem;
         }
+        .sparkline {
+            width: 100%;
+            height: 35px;
+            margin-top: 0.5rem;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -157,9 +171,14 @@ def display_dashboard(df):
             border_color = "#00ff00" if price_change >= 0 else "#ff0000"
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
+            # Generate sparkline SVG
+            sparkline_svg = None
+            if coin[1].get('sparkline_in_7d'):
+                sparkline_svg = create_sparkline(coin[1]['sparkline_in_7d'])
+            
             with col:
-                # Using st.markdown to render HTML for the card structure
-                col.markdown(f'''
+                # Using st.markdown to render HTML for the card structure with embedded sparkline
+                html_content = f'''
                     <div class="card" style="border: {border_width} solid {border_color};">
                         <img src="{coin[1]["image"]}" width="30" />
                         <h4>{coin[1]["name"]}</h4>
@@ -170,17 +189,14 @@ def display_dashboard(df):
                                 {price_change:.2f}%
                             </span>
                         </div>
-                ''', unsafe_allow_html=True)
-
-                # Directly add the sparkline chart here so it appears within the card div
-                if coin[1].get('sparkline_in_7d'):
-                    fig = create_sparkline(coin[1]['sparkline_in_7d'])
-                    if fig:
-                        col.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-                # Close the card div
-                col.markdown("</div>", unsafe_allow_html=True)
-
+                '''
+                
+                # Add sparkline if available
+                if sparkline_svg:
+                    html_content += f'<img src="{sparkline_svg}" class="sparkline" />'
+                
+                html_content += '</div>'
+                col.markdown(html_content, unsafe_allow_html=True)
 
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
