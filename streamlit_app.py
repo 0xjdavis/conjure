@@ -39,7 +39,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         width: 100%;
-        max-width: 1200px;
+        max-width: 200px;
         margin: 0 auto;
         padding: 0 20px;
         box-sizing: border-box;
