@@ -128,7 +128,7 @@ def create_sparkline(sparkline_data):
         fig.add_trace(go.Scatter(
             y=prices,
             mode='lines',
-            line=dict(color='#F5F5F5', width=1),
+            line=dict(color='#000000', width=1),
             showlegend=False
         ))
         
@@ -173,7 +173,7 @@ def display_dashboard(df):
             border-radius: 12px;
             text-align: center;
             max-width: 200px;
-            box-shadow: 0px 0px 10px gray;
+            box-shadow: 0px 0px 10px #D3D3D3;
         }
         .card img {
             display: block;
