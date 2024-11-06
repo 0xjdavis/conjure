@@ -125,80 +125,59 @@ def create_sparkline(sparkline_data):
     )
     
     return fig
+
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Add base CSS to style the column container itself
+    # Add CSS that targets the specific Streamlit container structure
     st.markdown("""
     <style>
-        /* Target the column container */
-        [data-testid="column"] {
+        [data-testid="stVerticalBlock"] {
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0.5rem;
         }
         
-        /* Style metric containers */
-        div[data-testid="stMetric"] {
-            padding: 0.5rem 0;
+        /* Target the metric value container */
+        [data-testid="stMetricValue"] {
+            display: flex;
+            justify-content: center;
             width: 100%;
         }
         
-        /* Center metric contents */
-        div[data-testid="stMetricValue"] {
+        /* Target the image container */
+        [data-testid="stImage"] {
             display: flex;
             justify-content: center;
-        }
-
-        /* Price change border styles */
-        [data-testid="column"].change-up-3 {
-            border: 2px solid #00ff00;
-        }
-        [data-testid="column"].change-down-3 {
-            border: 2px solid #ff0000;
-        }
-        [data-testid="column"].change-up-6 {
-            border: 3px solid #00ff00;
-        }
-        [data-testid="column"].change-down-6 {
-            border: 3px solid #ff0000;
-        }
-        [data-testid="column"].change-up-9 {
-            border: 4px solid #00ff00;
-        }
-        [data-testid="column"].change-down-9 {
-            border: 4px solid #ff0000;
+            margin-bottom: 0.5rem;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # Create grid layout
     cols = st.columns(4)
     for idx, coin in df.iterrows():
-        change_class = get_border_class(coin.price_change_percentage_24h)
-        
-        # Apply the class to the column
-        st.markdown(f"""
-            <script>
-                // Get the column element
-                var columns = document.querySelectorAll('[data-testid="column"]');
-                var column = columns[{idx % 4}];
-                // Add the change class
-                column.classList.add('{change_class}');
-            </script>
-        """, unsafe_allow_html=True)
-        
         with cols[idx % 4]:
+            # Apply dynamic border style to the vertical block
+            price_change = coin.get('price_change_percentage_24h', 0)
+            border_color = "#00ff00" if price_change >= 0 else "#ff0000"
+            border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
+            
+            st.markdown(f"""
+                <style>
+                    [data-testid="column"]:nth-child({(idx % 4) + 1}) [data-testid="stVerticalBlock"] {{
+                        border: {border_width} solid {border_color};
+                    }}
+                </style>
+            """, unsafe_allow_html=True)
+            
             st.image(coin["image"], width=30)
             st.metric(
                 label=coin["name"],
                 value=f"${coin['current_price']:,.2f}",
-                delta=f"{coin['price_change_percentage_24h']:.2f}%",
-                delta_color="normal" if coin['price_change_percentage_24h'] >= 0 else "inverse"
+                delta=f"{price_change:.2f}%",
+                delta_color="normal" if price_change >= 0 else "inverse"
             )
             
             if coin.get('sparkline_in_7d'):
