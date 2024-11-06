@@ -132,7 +132,7 @@ def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Base CSS styling for the card layout applied to each container
+    # Base CSS styling for card layout with dynamic borders
     st.markdown("""
     <style>
         .container-card {
@@ -159,30 +159,29 @@ def display_dashboard(df):
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
             with col:
-                # Use a container to create a bordered card effect
-                with st.container():
-                    col.markdown(
-                        f"<div class='container-card' style='border: {border_width} solid {border_color};'>",
-                        unsafe_allow_html=True,
-                    )
+                # Apply border to each card container with Sparkline nested within
+                col.markdown(
+                    f"<div class='container-card' style='border: {border_width} solid {border_color};'>",
+                    unsafe_allow_html=True,
+                )
 
-                    # Display image, name, price, and change inside the container
-                    st.image(coin[1]["image"], width=30)
-                    st.write(f"**{coin[1]['name']}**")
-                    st.write(f"${coin[1]['current_price']:,.2f}")
-                    st.write(
-                        f"<span style='color: {'#00ff00' if price_change >= 0 else '#ff0000'};'>{price_change:.2f}%</span>",
-                        unsafe_allow_html=True
-                    )
+                # Display image, name, price, and change inside the container
+                st.image(coin[1]["image"], width=30)
+                st.write(f"**{coin[1]['name']}**")
+                st.write(f"${coin[1]['current_price']:,.2f}")
+                st.write(
+                    f"<span style='color: {'#00ff00' if price_change >= 0 else '#ff0000'};'>{price_change:.2f}%</span>",
+                    unsafe_allow_html=True
+                )
 
-                    # Display the sparkline chart inside the same container
-                    if coin[1].get('sparkline_in_7d'):
-                        fig = create_sparkline(coin[1]['sparkline_in_7d'])
-                        if fig:
-                            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                # Display the sparkline chart inside the same bordered card
+                if coin[1].get('sparkline_in_7d'):
+                    fig = create_sparkline(coin[1]['sparkline_in_7d'])
+                    if fig:
+                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-                    # Close the card div
-                    col.markdown("</div>", unsafe_allow_html=True)
+                # Close the card div
+                col.markdown("</div>", unsafe_allow_html=True)
 
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
