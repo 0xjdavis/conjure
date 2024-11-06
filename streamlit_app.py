@@ -15,48 +15,6 @@ cache = TTLCache(maxsize=100, ttl=300)
 # Page configuration
 st.set_page_config(layout="wide")
 
-# Custom styling with centered content and fixed z-index issues
-st.markdown("""
-<style>
-    /* Remove default column padding */
-    div[data-testid="column"] {
-        padding: 0 0.5rem !important;
-    }
-    
-    /* Simple card style */
-    .crypto-card {
-        background: white;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        display: inline-block;
-        width: 100%;
-    }
-    
-    /* Border styles */
-    .change-up-3 {
-        border: 2px solid #00ff00;
-    }
-    .change-down-3 {
-        border: 2px solid #ff0000;
-    }
-    .change-up-6 {
-        border: 3px solid #00ff00;
-    }
-    .change-down-6 {
-        border: 3px solid #ff0000;
-    }
-    .change-up-9 {
-        border: 4px solid #00ff00;
-    }
-    .change-down-9 {
-        border: 4px solid #ff0000;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-
 class RateLimiter:
     def __init__(self, max_requests=10, time_window=60):
         self.max_requests = max_requests
@@ -168,45 +126,108 @@ def create_sparkline(sparkline_data):
     
     return fig
 
-def get_price_change_class(price_change):
-    """Determine the CSS class based on price change percentage"""
-    if price_change is None:
-        return ""
+def get_border_style(change_pct):
+    """Return the appropriate border style based on price change percentage"""
+    if change_pct is None:
+        return "none"
     
-    abs_change = abs(price_change)
+    abs_change = abs(change_pct)
+    color = "#00ff00" if change_pct >= 0 else "#ff0000"
+    
     if abs_change >= 9:
-        return "change-up-9" if price_change >= 0 else "change-down-9"
+        return f"4px solid {color}"
     elif abs_change >= 6:
-        return "change-up-6" if price_change >= 0 else "change-down-6"
+        return f"3px solid {color}"
     elif abs_change >= 3:
-        return "change-up-3" if price_change >= 0 else "change-down-3"
-    return ""
+        return f"2px solid {color}"
+    else:
+        return f"1px solid {color}"
 
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
+    
+    if df is None or df.empty:
+        st.error("No data available. Please try again later.")
+        return
+    
+    # Inject base styles
+    st.markdown("""
+    <style>
+        [data-testid="column"] {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            width: auto !important;
+        }
+        
+        div.element-container {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        div[data-testid="stImage"] {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        div[data-testid="stImage"] img {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        div[data-testid="stMetric"] {
+            width: 100% !important;
+            margin: 0.5rem 0 !important;
+        }
+        
+        div[data-testid="stMetricValue"] > div {
+            justify-content: center !important;
+        }
+        
+        .stPlotlyChart {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Create grid layout
     cols = st.columns(4)
     for idx, coin in df.iterrows():
-        with cols[idx % 4]:
-            # Simple container with border
-            st.markdown(f'<div class="crypto-card {get_price_change_class(coin.price_change_percentage_24h)}">', unsafe_allow_html=True)
+        col_idx = idx % 4
+        with cols[col_idx]:
+            # Apply specific border style to this column
+            st.markdown(f"""
+                <style>
+                    [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child({col_idx + 1}) {{
+                        border: {get_border_style(coin.price_change_percentage_24h)};
+                    }}
+                </style>
+            """, unsafe_allow_html=True)
             
-            # Content
+            # Add content
             st.image(coin["image"], width=30)
             st.metric(
                 label=coin["name"],
                 value=f"${coin['current_price']:,.2f}",
-                delta=f"{coin['price_change_percentage_24h']:.2f}%"
+                delta=f"{coin['price_change_percentage_24h']:.2f}%",
+                delta_color="normal" if coin['price_change_percentage_24h'] >= 0 else "inverse"
             )
             
-            # Sparkline
             if coin.get('sparkline_in_7d'):
                 fig = create_sparkline(coin['sparkline_in_7d'])
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-    
+                if fig:
+                    st.plotly_chart(
+                        fig,
+                        use_container_width=True,
+                        config={'displayModeBar': False}
+                    )
+
 def main():
     """Main function to run the Streamlit app"""
     # Initialize session state
