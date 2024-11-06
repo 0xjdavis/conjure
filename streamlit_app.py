@@ -142,36 +142,20 @@ def get_border_class(change_pct):
     return ""
 
 def display_dashboard(df):
-    st.title("Crypto Dashboard")
-    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    # Define styles once at the top
+    # Add CSS
     st.markdown("""
     <style>
-        .crypto-card {
-            border-radius: 10px;
-            padding: 16px;
+        div[data-testid="column"] > div:first-child {
             background: white;
-            margin-bottom: 1rem;
+            border-radius: 10px;
+            padding: 1rem;
+            height: 100%;
         }
         
-        .change-up-3 {
-            border: 2px solid #00ff00;
-        }
-        .change-down-3 {
-            border: 2px solid #ff0000;
-        }
-        .change-up-6 {
-            border: 3px solid #00ff00;
-        }
-        .change-down-6 {
-            border: 3px solid #ff0000;
-        }
-        .change-up-9 {
-            border: 4px solid #00ff00;
-        }
-        .change-down-9 {
-            border: 4px solid #ff0000;
+        div[data-testid="column"] > div.stBorder {
+            border-color: #00ff00 !important;
+            border-width: 2px !important;
+            border-style: solid !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -179,20 +163,11 @@ def display_dashboard(df):
     cols = st.columns(4)
     for idx, coin in df.iterrows():
         with cols[idx % 4]:
-            # Determine border class based on price change
-            price_change = coin.get('price_change_percentage_24h', 0)
-            border_class = ""
-            if abs(price_change) >= 9:
-                border_class = "change-up-9" if price_change >= 0 else "change-down-9"
-            elif abs(price_change) >= 6:
-                border_class = "change-up-6" if price_change >= 0 else "change-down-6"
-            elif abs(price_change) >= 3:
-                border_class = "change-up-3" if price_change >= 0 else "change-down-3"
-
-            # Start card div
-            st.markdown(f'<div class="crypto-card {border_class}">', unsafe_allow_html=True)
+            # Create a container with border
+            container = st.container()
+            container.markdown('<div class="stBorder">', unsafe_allow_html=True)
             
-            # Content container
+            # Content
             st.image(coin["image"], width=30)
             st.metric(
                 label=coin["name"],
@@ -205,9 +180,9 @@ def display_dashboard(df):
                 fig = create_sparkline(coin['sparkline_in_7d'])
                 if fig:
                     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-            # End card div
-            st.markdown('</div>', unsafe_allow_html=True)
+            
+            container.markdown('</div>', unsafe_allow_html=True)
+            
 def main():
     """Main function to run the Streamlit app"""
     # Initialize session state
