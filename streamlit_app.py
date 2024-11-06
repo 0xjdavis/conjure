@@ -265,6 +265,21 @@ def create_sparkline(sparkline_data):
     
     return fig
 
+def get_price_change_class(price_change):
+    """Determine the CSS class based on price change percentage"""
+    if price_change is None:
+        return ""
+    
+    abs_change = abs(price_change)
+    if abs_change >= 9:
+        return "change-up-9" if price_change >= 0 else "change-down-9"
+    elif abs_change >= 6:
+        return "change-up-6" if price_change >= 0 else "change-down-6"
+    elif abs_change >= 3:
+        return "change-up-3" if price_change >= 0 else "change-down-3"
+    return ""
+
+
 def display_dashboard(df):
     """Display the cryptocurrency dashboard"""
     st.markdown('<div class="dashboard-header">', unsafe_allow_html=True)
