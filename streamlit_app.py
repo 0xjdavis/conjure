@@ -126,6 +126,7 @@ def create_sparkline(sparkline_data):
     
     return fig
 
+
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -139,10 +140,12 @@ def display_dashboard(df):
             padding: 1rem;
             margin: 0.5rem;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .card img {
-            display: block;
-            margin: 0 auto 0.5rem;
+            margin-bottom: 0.5rem;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -158,29 +161,29 @@ def display_dashboard(df):
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
             with col:
-                # Using st.markdown to render HTML for the card structure
-                col.markdown(f'''
-                    <div class="card" style="border: {border_width} solid {border_color};">
-                        <img src="{coin[1]["image"]}" width="30" />
-                        <h4>{coin[1]["name"]}</h4>
-                        <div>
-                            <strong>${coin[1]['current_price']:,.2f}</strong>
-                            <br />
-                            <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
-                                {price_change:.2f}%
-                            </span>
-                        </div>
-                ''', unsafe_allow_html=True)
+                # Use a Streamlit container to wrap the HTML and the sparkline chart together
+                with st.container():
+                    col.markdown(f'''
+                        <div class="card" style="border: {border_width} solid {border_color};">
+                            <img src="{coin[1]["image"]}" width="30" />
+                            <h4>{coin[1]["name"]}</h4>
+                            <div>
+                                <strong>${coin[1]['current_price']:,.2f}</strong>
+                                <br />
+                                <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
+                                    {price_change:.2f}%
+                                </span>
+                            </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    # Add the sparkline chart directly within the card container
+                    if coin[1].get('sparkline_in_7d'):
+                        fig = create_sparkline(coin[1]['sparkline_in_7d'])
+                        if fig:
+                            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-                # Directly add the sparkline chart here so it appears within the card div
-                if coin[1].get('sparkline_in_7d'):
-                    fig = create_sparkline(coin[1]['sparkline_in_7d'])
-                    if fig:
-                        col.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-                # Close the card div
-                col.markdown("</div>", unsafe_allow_html=True)
-
+                    # Close the card div
+                    col.markdown("</div>", unsafe_allow_html=True)
 
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
