@@ -18,6 +18,14 @@ st.set_page_config(layout="wide")
 # Custom styling with centered content
 st.markdown("""
 <style>
+
+    div[data-testid="stTitle"],
+    div[data-testid="stCaption"]{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
     div[data-testid="stVerticalBlock"] {
         display: flex;
         flex-direction: column;
