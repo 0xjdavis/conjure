@@ -127,14 +127,15 @@ def create_sparkline(sparkline_data):
     return fig
 
 
+
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Base CSS styling for the card layout
+    # Base CSS styling for the card layout applied to each container
     st.markdown("""
     <style>
-        .card {
+        .container-card {
             background-color: white;
             border-radius: 10px;
             padding: 1rem;
@@ -143,9 +144,6 @@ def display_dashboard(df):
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        .card img {
-            margin-bottom: 0.5rem;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -161,22 +159,23 @@ def display_dashboard(df):
             border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
             
             with col:
-                # Use a Streamlit container to wrap the HTML and the sparkline chart together
+                # Use a container to create a bordered card effect
                 with st.container():
-                    col.markdown(f'''
-                        <div class="card" style="border: {border_width} solid {border_color};">
-                            <img src="{coin[1]["image"]}" width="30" />
-                            <h4>{coin[1]["name"]}</h4>
-                            <div>
-                                <strong>${coin[1]['current_price']:,.2f}</strong>
-                                <br />
-                                <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
-                                    {price_change:.2f}%
-                                </span>
-                            </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    # Add the sparkline chart directly within the card container
+                    col.markdown(
+                        f"<div class='container-card' style='border: {border_width} solid {border_color};'>",
+                        unsafe_allow_html=True,
+                    )
+
+                    # Display image, name, price, and change inside the container
+                    st.image(coin[1]["image"], width=30)
+                    st.write(f"**{coin[1]['name']}**")
+                    st.write(f"${coin[1]['current_price']:,.2f}")
+                    st.write(
+                        f"<span style='color: {'#00ff00' if price_change >= 0 else '#ff0000'};'>{price_change:.2f}%</span>",
+                        unsafe_allow_html=True
+                    )
+
+                    # Display the sparkline chart inside the same container
                     if coin[1].get('sparkline_in_7d'):
                         fig = create_sparkline(coin[1]['sparkline_in_7d'])
                         if fig:
