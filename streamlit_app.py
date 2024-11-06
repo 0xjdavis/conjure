@@ -109,6 +109,9 @@ st.markdown("""
         overflow: hidden;
         box-shadow: 0px 0px 10px gray;
     }
+    data-testid="stFullScreenFrame" {
+        max-width: 200px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
