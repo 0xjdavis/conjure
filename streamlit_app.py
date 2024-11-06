@@ -16,6 +16,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 st.set_page_config(layout="wide")
 
 # Custom styling with centered content and fixed z-index issues
+
 st.markdown("""
 <style>
     .main-container {
@@ -39,63 +40,46 @@ st.markdown("""
         box-sizing: border-box;
     }
     
-    /* Column container fixes */
+    /* Reset column styles */
     div[data-testid="column"] {
-        width: 100% !important;
-        padding: 0.5rem !important;
-        box-sizing: border-box;
+        padding: 0 !important;
     }
     
-    /* Card wrapper */
-    .card-wrapper {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* Card container */
+    /* Card styles */
     .crypto-card {
         background-color: #ffffff;
         border-radius: 10px;
         padding: 1rem;
-        width: 100%;
+        margin: 0 auto;
+        width: fit-content;
+        min-width: 200px;
+        max-width: 100%;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        overflow: hidden;
-        position: relative;
+        display: inline-block;
     }
     
     /* Price change border classes */
     .change-up-3 {
-        outline: 2px solid #00ff00;
-        outline-offset: -2px;
+        border: 2px solid #00ff00;
     }
     .change-down-3 {
-        outline: 2px solid #ff0000;
-        outline-offset: -2px;
+        border: 2px solid #ff0000;
     }
     .change-up-6 {
-        outline: 3px solid #00ff00;
-        outline-offset: -3px;
+        border: 3px solid #00ff00;
     }
     .change-down-6 {
-        outline: 3px solid #ff0000;
-        outline-offset: -3px;
+        border: 3px solid #ff0000;
     }
     .change-up-9 {
-        outline: 4px solid #00ff00;
-        outline-offset: -4px;
+        border: 4px solid #00ff00;
     }
     .change-down-9 {
-        outline: 4px solid #ff0000;
-        outline-offset: -4px;
+        border: 4px solid #ff0000;
     }
     
-    /* Content styling */
+    /* Content container */
     .card-content {
-        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -103,19 +87,20 @@ st.markdown("""
     
     /* Image container */
     div[data-testid="stImage"] {
+        margin-bottom: 0.5rem;
         display: flex;
         justify-content: center;
-        margin-bottom: 0.5rem;
     }
     
-    /* Metric styling */
+    div[data-testid="stImage"] img {
+        display: block;
+        margin: 0 auto;
+    }
+    
+    /* Metric container */
     div[data-testid="stMetric"] {
-        width: 100%;
-        text-align: center;
-    }
-    
-    div[data-testid="stMetricValue"] {
-        justify-content: center;
+        margin: 0.5rem 0;
+        width: auto;
     }
     
     /* Chart container */
@@ -124,8 +109,10 @@ st.markdown("""
         margin-top: 0.5rem;
     }
     
-    .js-plotly-plot, .plot-container {
+    /* Ensure plots fit within card */
+    .js-plotly-plot {
         width: 100% !important;
+        max-width: 100% !important;
     }
     
     /* Responsive adjustments */
@@ -144,6 +131,9 @@ st.markdown("""
     @media (max-width: 576px) {
         .crypto-grid {
             grid-template-columns: 1fr;
+        }
+        .crypto-card {
+            width: 100%;
         }
     }
 </style>
@@ -286,9 +276,6 @@ def display_dashboard(df):
         st.error("No data available. Please try again later.")
         return
 
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown('<div class="crypto-grid">', unsafe_allow_html=True)
-    
     cols_per_row = 4
     for i in range(0, len(df), cols_per_row):
         cols = st.columns(cols_per_row)
@@ -296,18 +283,14 @@ def display_dashboard(df):
             if i + j < len(df):
                 coin = df.iloc[i + j]
                 with col:
-                    # Create a container div for the entire card
-                    container = st.container()
-                    with container:
-                        st.markdown(
-                            f'''
-                            <div class="card-wrapper">
-                                <div class="crypto-card {get_price_change_class(coin.get('price_change_percentage_24h'))}">
-                                    <div class="card-content">
-                            ''',
-                            unsafe_allow_html=True
-                        )
+                    # Wrap each card in a container
+                    with st.container():
+                        change_class = get_price_change_class(coin.get('price_change_percentage_24h'))
                         
+                        # Start card div
+                        st.markdown(f'<div class="crypto-card {change_class}">', unsafe_allow_html=True)
+                        
+                        # Card content
                         if pd.notna(coin["image"]):
                             st.image(coin["image"], width=30)
                         
@@ -322,22 +305,19 @@ def display_dashboard(df):
                             delta_color=delta_color
                         )
                         
+                        # Sparkline chart
                         sparkline_data = coin.get('sparkline_in_7d')
                         if sparkline_data is not None:
                             fig = create_sparkline(sparkline_data)
                             if fig:
-                                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
                                 st.plotly_chart(
                                     fig,
                                     use_container_width=True,
                                     config={'displayModeBar': False, 'staticPlot': True}
                                 )
-                                st.markdown('</div>', unsafe_allow_html=True)
                         
-                        # Close the divs
-                        st.markdown('</div></div></div>', unsafe_allow_html=True)
-
-    st.markdown('</div></div>', unsafe_allow_html=True)
+                        # Close card div
+                        st.markdown('</div>', unsafe_allow_html=True)
     
 def main():
     """Main function to run the Streamlit app"""
