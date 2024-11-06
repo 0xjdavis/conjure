@@ -16,49 +16,24 @@ cache = TTLCache(maxsize=100, ttl=300)
 st.set_page_config(layout="wide")
 
 # Custom styling with centered content and fixed z-index issues
-
 st.markdown("""
 <style>
-    .main-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        box-sizing: border-box;
-    }
-    
-    .dashboard-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    
-    .crypto-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-        padding: 1rem;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* Reset column styles */
+    /* Remove default column padding */
     div[data-testid="column"] {
-        padding: 0 !important;
+        padding: 0 0.5rem !important;
     }
     
-    /* Card styles */
+    /* Simple card style */
     .crypto-card {
-        background-color: #ffffff;
+        background: white;
         border-radius: 10px;
         padding: 1rem;
-        margin: 0 auto;
-        width: fit-content;
-        min-width: 200px;
-        max-width: 100%;
-        box-sizing: border-box;
+        margin-bottom: 1rem;
         display: inline-block;
+        width: 100%;
     }
     
-    /* Price change border classes */
+    /* Border styles */
     .change-up-3 {
         border: 2px solid #00ff00;
     }
@@ -77,67 +52,9 @@ st.markdown("""
     .change-down-9 {
         border: 4px solid #ff0000;
     }
-    
-    /* Content container */
-    .card-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    /* Image container */
-    div[data-testid="stImage"] {
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: center;
-    }
-    
-    div[data-testid="stImage"] img {
-        display: block;
-        margin: 0 auto;
-    }
-    
-    /* Metric container */
-    div[data-testid="stMetric"] {
-        margin: 0.5rem 0;
-        width: auto;
-    }
-    
-    /* Chart container */
-    .chart-container {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-    
-    /* Ensure plots fit within card */
-    .js-plotly-plot {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 1200px) {
-        .crypto-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    
-    @media (max-width: 992px) {
-        .crypto-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .crypto-grid {
-            grid-template-columns: 1fr;
-        }
-        .crypto-card {
-            width: 100%;
-        }
-    }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 class RateLimiter:
@@ -266,58 +183,29 @@ def get_price_change_class(price_change):
     return ""
 
 def display_dashboard(df):
-    """Display the cryptocurrency dashboard"""
-    st.markdown('<div class="dashboard-header">', unsafe_allow_html=True)
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    if df is None or df.empty:
-        st.error("No data available. Please try again later.")
-        return
-
-    cols_per_row = 4
-    for i in range(0, len(df), cols_per_row):
-        cols = st.columns(cols_per_row)
-        for j, col in enumerate(cols):
-            if i + j < len(df):
-                coin = df.iloc[i + j]
-                with col:
-                    # Wrap each card in a container
-                    with st.container():
-                        change_class = get_price_change_class(coin.get('price_change_percentage_24h'))
-                        
-                        # Start card div
-                        st.markdown(f'<div class="crypto-card {change_class}">', unsafe_allow_html=True)
-                        
-                        # Card content
-                        if pd.notna(coin["image"]):
-                            st.image(coin["image"], width=30)
-                        
-                        price = f"${coin['current_price']:,.2f}"
-                        change = f"{coin['price_change_percentage_24h']:.2f}%" if pd.notna(coin['price_change_percentage_24h']) else "N/A"
-                        delta_color = "normal" if pd.notna(coin['price_change_percentage_24h']) and coin['price_change_percentage_24h'] >= 0 else "inverse"
-                        
-                        st.metric(
-                            label=coin["name"],
-                            value=price,
-                            delta=change,
-                            delta_color=delta_color
-                        )
-                        
-                        # Sparkline chart
-                        sparkline_data = coin.get('sparkline_in_7d')
-                        if sparkline_data is not None:
-                            fig = create_sparkline(sparkline_data)
-                            if fig:
-                                st.plotly_chart(
-                                    fig,
-                                    use_container_width=True,
-                                    config={'displayModeBar': False, 'staticPlot': True}
-                                )
-                        
-                        # Close card div
-                        st.markdown('</div>', unsafe_allow_html=True)
+    cols = st.columns(4)
+    for idx, coin in df.iterrows():
+        with cols[idx % 4]:
+            # Simple container with border
+            st.markdown(f'<div class="crypto-card {get_price_change_class(coin.price_change_percentage_24h)}">', unsafe_allow_html=True)
+            
+            # Content
+            st.image(coin["image"], width=30)
+            st.metric(
+                label=coin["name"],
+                value=f"${coin['current_price']:,.2f}",
+                delta=f"{coin['price_change_percentage_24h']:.2f}%"
+            )
+            
+            # Sparkline
+            if coin.get('sparkline_in_7d'):
+                fig = create_sparkline(coin['sparkline_in_7d'])
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            
+            st.markdown('</div>', unsafe_allow_html=True)
     
 def main():
     """Main function to run the Streamlit app"""
