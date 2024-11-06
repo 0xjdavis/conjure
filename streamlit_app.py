@@ -126,32 +126,27 @@ def create_sparkline(sparkline_data):
     
     return fig
 
-def get_border_style(change_pct):
-    """Return the appropriate border style based on price change percentage"""
+# First, update the border style function to be simpler
+def get_border_class(change_pct):
+    """Return the appropriate CSS class based on price change percentage"""
     if change_pct is None:
-        return "none"
+        return ""
     
     abs_change = abs(change_pct)
-    color = "#00ff00" if change_pct >= 0 else "#ff0000"
-    
     if abs_change >= 9:
-        return f"4px solid {color}"
+        return "change-up-9" if change_pct >= 0 else "change-down-9"
     elif abs_change >= 6:
-        return f"3px solid {color}"
+        return "change-up-6" if change_pct >= 0 else "change-down-6"
     elif abs_change >= 3:
-        return f"2px solid {color}"
-    else:
-        return f"1px solid {color}"
+        return "change-up-3" if change_pct >= 0 else "change-down-3"
+    return ""
 
+# Then, update the display_dashboard function to include this CSS and use classes
 def display_dashboard(df):
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    if df is None or df.empty:
-        st.error("No data available. Please try again later.")
-        return
-    
-    # Inject base styles
+    # Inject base styles with border classes
     st.markdown("""
     <style>
         [data-testid="column"] {
@@ -162,6 +157,27 @@ def display_dashboard(df):
             flex-direction: column !important;
             align-items: center !important;
             width: auto !important;
+            margin: 0.5rem !important;
+        }
+        
+        /* Border classes */
+        .change-up-3 [data-testid="column"] {
+            border: 2px solid #00ff00 !important;
+        }
+        .change-down-3 [data-testid="column"] {
+            border: 2px solid #ff0000 !important;
+        }
+        .change-up-6 [data-testid="column"] {
+            border: 3px solid #00ff00 !important;
+        }
+        .change-down-6 [data-testid="column"] {
+            border: 3px solid #ff0000 !important;
+        }
+        .change-up-9 [data-testid="column"] {
+            border: 4px solid #00ff00 !important;
+        }
+        .change-down-9 [data-testid="column"] {
+            border: 4px solid #ff0000 !important;
         }
         
         div.element-container {
@@ -200,16 +216,11 @@ def display_dashboard(df):
     cols = st.columns(4)
     for idx, coin in df.iterrows():
         col_idx = idx % 4
+        
+        # Wrap each column in a div with the appropriate border class
+        st.markdown(f'<div class="{get_border_class(coin.price_change_percentage_24h)}">', unsafe_allow_html=True)
+        
         with cols[col_idx]:
-            # Apply specific border style to this column
-            st.markdown(f"""
-                <style>
-                    [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child({col_idx + 1}) {{
-                        border: {get_border_style(coin.price_change_percentage_24h)};
-                    }}
-                </style>
-            """, unsafe_allow_html=True)
-            
             # Add content
             st.image(coin["image"], width=30)
             st.metric(
@@ -227,7 +238,9 @@ def display_dashboard(df):
                         use_container_width=True,
                         config={'displayModeBar': False}
                     )
-
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
 def main():
     """Main function to run the Streamlit app"""
     # Initialize session state
