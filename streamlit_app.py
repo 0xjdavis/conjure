@@ -100,40 +100,54 @@ async def fetch_crypto_data():
 
 def fig_to_svg(fig):
     """Convert Plotly figure to SVG string"""
-    svg_str = pio.to_image(fig, format='svg')
-    svg_str = base64.b64encode(svg_str).decode()
-    return f'data:image/svg+xml;base64,{svg_str}'
+    try:
+        # Configure the renderer
+        pio.kaleido.scope.default_format = "svg"
+        pio.kaleido.scope.default_width = 150
+        pio.kaleido.scope.default_height = 35
+        
+        # Convert to SVG
+        svg_bytes = pio.to_image(fig, format='svg')
+        svg_str = base64.b64encode(svg_bytes).decode()
+        return f'data:image/svg+xml;base64,{svg_str}'
+    except Exception as e:
+        st.warning(f"Failed to generate sparkline: {str(e)}")
+        return None
 
 def create_sparkline(sparkline_data):
     """Create a compact sparkline chart and return as SVG"""
-    if not sparkline_data or not isinstance(sparkline_data, dict) or 'price' not in sparkline_data:
-        return None
-    
-    prices = sparkline_data['price']
-    if not prices or len(prices) == 0:
-        return None
+    try:
+        if not sparkline_data or not isinstance(sparkline_data, dict) or 'price' not in sparkline_data:
+            return None
         
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        y=prices,
-        mode='lines',
-        line=dict(color='#3366cc', width=1),
-        showlegend=False
-    ))
-    
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        height=35,
-        width=150,
-        autosize=False,
-        yaxis={'visible': False, 'showgrid': False, 'zeroline': False},
-        xaxis={'visible': False, 'showgrid': False, 'zeroline': False},
-        hovermode=False
-    )
-    
-    return fig_to_svg(fig)
+        prices = sparkline_data['price']
+        if not prices or len(prices) == 0:
+            return None
+            
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            y=prices,
+            mode='lines',
+            line=dict(color='#3366cc', width=1),
+            showlegend=False
+        ))
+        
+        fig.update_layout(
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=35,
+            width=150,
+            autosize=False,
+            yaxis={'visible': False, 'showgrid': False, 'zeroline': False},
+            xaxis={'visible': False, 'showgrid': False, 'zeroline': False},
+            hovermode=False
+        )
+        
+        return fig_to_svg(fig)
+    except Exception as e:
+        st.warning(f"Error creating sparkline: {str(e)}")
+        return None
 
 def display_dashboard(df):
     st.title("Crypto Dashboard")
@@ -142,6 +156,9 @@ def display_dashboard(df):
     # Base CSS styling for the card layout
     st.markdown("""
     <style>
+        .price {
+            color: #000000
+        }
         .card {
             background-color: white;
             border-radius: 10px;
@@ -183,7 +200,7 @@ def display_dashboard(df):
                         <img src="{coin[1]["image"]}" width="30" />
                         <h4>{coin[1]["name"]}</h4>
                         <div>
-                            <strong>${coin[1]['current_price']:,.2f}</strong>
+                            <strong class="price">${coin[1]['current_price']:,.2f}</strong>
                             <br />
                             <span style="color: {'#00ff00' if price_change >= 0 else '#ff0000'};">
                                 {price_change:.2f}%
@@ -198,20 +215,6 @@ def display_dashboard(df):
                 html_content += '</div>'
                 col.markdown(html_content, unsafe_allow_html=True)
 
-def get_border_class(change_pct):
-    """Return the appropriate CSS class based on price change percentage"""
-    if change_pct is None:
-        return ""
-    
-    abs_change = abs(change_pct)
-    if abs_change >= 9:
-        return "change-up-9" if change_pct >= 0 else "change-down-9"
-    elif abs_change >= 6:
-        return "change-up-6" if change_pct >= 0 else "change-down-6"
-    elif abs_change >= 3:
-        return "change-up-3" if change_pct >= 0 else "change-down-3"
-    return ""
-            
 def main():
     """Main function to run the Streamlit app"""
     # Initialize session state
