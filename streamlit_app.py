@@ -125,8 +125,87 @@ def create_sparkline(sparkline_data):
     )
     
     return fig
+def display_dashboard(df):
+    st.title("Crypto Dashboard")
+    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-# First, update the border style function to be simpler
+    # Add base CSS to style the column container itself
+    st.markdown("""
+    <style>
+        /* Target the column container */
+        [data-testid="column"] {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Style metric containers */
+        div[data-testid="stMetric"] {
+            padding: 0.5rem 0;
+            width: 100%;
+        }
+        
+        /* Center metric contents */
+        div[data-testid="stMetricValue"] {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Price change border styles */
+        [data-testid="column"].change-up-3 {
+            border: 2px solid #00ff00;
+        }
+        [data-testid="column"].change-down-3 {
+            border: 2px solid #ff0000;
+        }
+        [data-testid="column"].change-up-6 {
+            border: 3px solid #00ff00;
+        }
+        [data-testid="column"].change-down-6 {
+            border: 3px solid #ff0000;
+        }
+        [data-testid="column"].change-up-9 {
+            border: 4px solid #00ff00;
+        }
+        [data-testid="column"].change-down-9 {
+            border: 4px solid #ff0000;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Create grid layout
+    cols = st.columns(4)
+    for idx, coin in df.iterrows():
+        change_class = get_border_class(coin.price_change_percentage_24h)
+        
+        # Apply the class to the column
+        st.markdown(f"""
+            <script>
+                // Get the column element
+                var columns = document.querySelectorAll('[data-testid="column"]');
+                var column = columns[{idx % 4}];
+                // Add the change class
+                column.classList.add('{change_class}');
+            </script>
+        """, unsafe_allow_html=True)
+        
+        with cols[idx % 4]:
+            st.image(coin["image"], width=30)
+            st.metric(
+                label=coin["name"],
+                value=f"${coin['current_price']:,.2f}",
+                delta=f"{coin['price_change_percentage_24h']:.2f}%",
+                delta_color="normal" if coin['price_change_percentage_24h'] >= 0 else "inverse"
+            )
+            
+            if coin.get('sparkline_in_7d'):
+                fig = create_sparkline(coin['sparkline_in_7d'])
+                if fig:
+                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
     if change_pct is None:
@@ -140,78 +219,6 @@ def get_border_class(change_pct):
     elif abs_change >= 3:
         return "change-up-3" if change_pct >= 0 else "change-down-3"
     return ""
-
-def display_dashboard(df):
-    # First, let's style the content properly within the Streamlit app
-    st.markdown("""
-    <style>
-        .crypto-container {
-            background: white;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 2px solid transparent;
-        }
-        
-        /* Override Streamlit's default padding */
-        div[data-testid="column"] {
-            padding: 0.5rem !important;
-        }
-
-        /* Ensure elements stack properly */
-        div[data-testid="stImage"] {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 0.5rem;
-        }
-
-        div[data-testid="stMetric"] {
-            margin: 0.5rem 0;
-        }
-
-        /* Chart container */
-        .element-container {
-            margin: 0.5rem 0;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    cols = st.columns(4)
-    for idx, coin in df.iterrows():
-        with cols[idx % 4]:
-            # Determine border color based on price change
-            price_change = coin.get('price_change_percentage_24h', 0)
-            border_color = "#00ff00" if price_change >= 0 else "#ff0000"
-            border_width = "4px" if abs(price_change) >= 9 else "3px" if abs(price_change) >= 6 else "2px"
-            
-            # Create a container with dynamic border style
-            st.markdown(
-                f"""
-                <div class="crypto-container" 
-                     style="border: {border_width} solid {border_color};">
-                """, 
-                unsafe_allow_html=True
-            )
-            
-            # Content
-            st.image(coin["image"], width=30)
-            st.metric(
-                label=coin["name"],
-                value=f"${coin['current_price']:,.2f}",
-                delta=f"{price_change:.2f}%",
-                delta_color="normal" if price_change >= 0 else "inverse"
-            )
-            
-            if coin.get('sparkline_in_7d'):
-                fig = create_sparkline(coin['sparkline_in_7d'])
-                if fig:
-                    st.plotly_chart(
-                        fig,
-                        use_container_width=True,
-                        config={'displayModeBar': False}
-                    )
-            
-            st.markdown("</div>", unsafe_allow_html=True)
             
 def main():
     """Main function to run the Streamlit app"""
