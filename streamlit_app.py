@@ -30,6 +30,9 @@ st.markdown("""
         align-items: center;
         justify-content: center;
     }
+    .main-container{
+        width: 800px;
+    }
     div[data-testid="stVerticalBlock"] {
         display: flex;
         flex-direction: column;
