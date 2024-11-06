@@ -85,32 +85,38 @@ st.markdown("""
     
     /* Make Plotly charts expand full width */
     div[data-testid="stColumn"] .stPlotlyChart {
-        width: 100%;
+        width: 100% !important;
     }
     
     /* Ensure the Plotly chart container takes full width */
     div[data-testid="stColumn"] .stPlotlyChart > div {
-        width: 100%;
+        width: 100% !important;
     }
     
     /* Adjust the SVG within Plotly charts to full width */
     div[data-testid="stColumn"] .stPlotlyChart svg {
-        width: 100%;
+        width: 100% !important;
     }
     
     /* Remove any fixed width from the chart wrapper */
     .js-plotly-plot, .plot-container {
-        width: 100%; 
+        width: 100% !important;
     }    
-    .svg-container{
-        min-width: 100%;
+    .svg-container {
+        width: 100% !important;
     }
     .crypto-card {
         overflow: hidden;
         box-shadow: 0px 0px 10px gray;
+        width: 100%;
     }
-    data-testid="stFullScreenFrame" {
-        max-width: 200px;
+    .chart-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    /* Force the main-svg to respect container width */
+    .main-svg {
+        width: 100% !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -218,6 +224,7 @@ def create_sparkline(sparkline_data):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         height=35,
+        width=None,  # Remove fixed width
         autosize=True,
         yaxis={'visible': False, 'showgrid': False, 'zeroline': False},
         xaxis={'visible': False, 'showgrid': False, 'zeroline': False},
@@ -272,7 +279,11 @@ def display_dashboard(df):
                                 st.plotly_chart(
                                     fig,
                                     use_container_width=True,
-                                    config={'displayModeBar': False, 'staticPlot': True}
+                                    config={
+                                        'displayModeBar': False,
+                                        'staticPlot': True,
+                                        'responsive': True
+                                    }
                                 )
                                 st.markdown('</div>', unsafe_allow_html=True)
                         
