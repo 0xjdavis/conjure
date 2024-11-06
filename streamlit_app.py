@@ -25,6 +25,7 @@ class RateLimiter:
         
     async def wait_if_needed(self):
         now = time.time()
+        # Clean up old requests
         self.requests = [req_time for req_time in self.requests 
                         if now - req_time < self.time_window]
         
@@ -36,6 +37,7 @@ class RateLimiter:
                 
         self.requests.append(now)
 
+# Initialize rate limiter with 8 requests per minute
 rate_limiter = RateLimiter(max_requests=8, time_window=60)
 
 async def fetch_crypto_data_with_retry(session, url, params):
@@ -45,12 +47,13 @@ async def fetch_crypto_data_with_retry(session, url, params):
     
     for attempt in range(max_retries):
         try:
+            # Check rate limit before making request
             await rate_limiter.wait_if_needed()
             
             async with session.get(url, params=params) as response:
                 if response.status == 200:
                     return await response.json()
-                elif response.status == 429:
+                elif response.status == 429:  # Too Many Requests
                     delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
                     st.warning(f"Rate limit exceeded. Waiting {delay:.1f} seconds... (Attempt {attempt + 1}/{max_retries})")
                     await asyncio.sleep(delay)
@@ -70,6 +73,7 @@ async def fetch_crypto_data():
     """Fetch cryptocurrency data with caching"""
     cache_key = 'crypto_data'
     
+    # Return cached data if available
     if cache_key in cache:
         return cache[cache_key]
     
@@ -150,15 +154,13 @@ def create_sparkline(sparkline_data):
         return None
 
 def display_dashboard(df):
+    """Display the cryptocurrency dashboard"""
     st.title("Crypto Dashboard")
     st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Base CSS styling for the card layout
     st.markdown("""
     <style>
-        .price {
-            color: #000000
-        }
         .card {
             background-color: white;
             border-radius: 10px;
@@ -169,6 +171,9 @@ def display_dashboard(df):
         .card img {
             display: block;
             margin: 0 auto 0.5rem;
+        }
+        .price {
+            color: #000000;
         }
         .sparkline {
             width: 100%;
