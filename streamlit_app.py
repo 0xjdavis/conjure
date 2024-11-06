@@ -38,10 +38,13 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 200px;
+        width: 100%;
         margin: 0 auto;
         padding: 0 20px;
         box-sizing: border-box;
+    }
+    div[data-testid="stVerticalBlock"] div {
+        max-width: 200px;
     }
     div[data-testid="stColumn"] {
         background-color: #ffffff;
