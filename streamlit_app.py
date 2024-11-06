@@ -184,6 +184,7 @@ def display_dashboard(df):
                 fig = create_sparkline(coin['sparkline_in_7d'])
                 if fig:
                     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    
 
 def get_border_class(change_pct):
     """Return the appropriate CSS class based on price change percentage"""
