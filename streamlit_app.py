@@ -159,11 +159,12 @@ def display_dashboard(df):
     <style>
         .card {
             background-color: white;
-            border-radius: 10px;
-            padding: 0;
+            border-radius: 12px;
+            padding: 10px;
             margin: 5px 0;
             text-align: center;
             max-width: 200px;
+            box-shadow: 0px 0px 10px gray;
         }
         .card img {
             display: block;
